@@ -1,0 +1,33 @@
+---
+# SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
+#
+# SPDX-License-Identifier: MIT
+#
+# TF tasks for the Task runner:
+#
+# https://taskfile.dev
+#
+
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - task: check
+
+  check:
+    desc: Check the project with pre-commit
+    cmds:
+      - pre-commit run --all-files
+
+  run:
+    desc: Run a specific pre-commit check on the project
+    cmds:
+      - pre-commit run "{{.HOOK_ID}}" --all-files
+    requires:
+      vars: [HOOK_ID]
+
+  setup:
+    desc: Setup pre-commit for use
+    cmds:
+      - pre-commit install

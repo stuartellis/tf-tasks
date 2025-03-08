@@ -1,0 +1,36 @@
+---
+# SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
+#
+# SPDX-License-Identifier: MIT
+#
+# Configuration for yamllint CLI tool
+#
+# See: https://yamllint.readthedocs.io
+
+# Begin with yamllint default settings
+extends: default
+
+rules:
+  # Rules for curly braces: {}
+  braces:
+    forbid: false
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+
+  # Rules for round brackets: ()
+  brackets:
+    forbid: false
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+
+  # Do not require three dashes at the start of a YAML document
+  document-start: disable
+
+  # Rules for line length
+  line-length:
+    max: 150
+    level: error

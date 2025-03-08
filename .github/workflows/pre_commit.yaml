@@ -1,0 +1,30 @@
+---
+# SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
+#
+# SPDX-License-Identifier: MIT
+#
+# Configuration for a GitHub Actions workflow
+#
+# See: https://github.com/features/actions
+
+name: pre-commit
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      - uses: aquasecurity/setup-trivy@v0.2.2
+        with:
+          version: v0.58.0
+          cache: true
+      - uses: pre-commit/action@v3.0.1

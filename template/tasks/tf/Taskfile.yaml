@@ -1,0 +1,148 @@
+---
+# SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
+#
+# SPDX-License-Identifier: MIT
+#
+# TF tasks for the Task runner:
+#
+# https://taskfile.dev
+#
+# Requires these environment variables:
+#
+# AWS_PROFILE
+# ENV
+# STACK
+# VARIANT
+# PRODUCT_NAME
+# GITLAB_PROJECT_ID
+# TF_HTTP_LOCK_METHOD
+# TF_HTTP_UNLOCK_METHOD
+# TF_HTTP_USERNAME
+# TF_HTTP_PASSWORD
+# TF_HTTP_RETRY_WAIT_MIN
+
+version: "3"
+
+vars:
+  TF_CLI_EXE: terraform
+
+  TF_CLI_STATE_NAME: "{{.PRODUCT_NAME}}-{{.STACK}}-{{.ENV}}-{{.VARIANT}}"
+
+  TF_CLI_HTTP_BACKEND_ADDRESS: "https://gitlab.com/api/v4/projects/{{.GITLAB_PROJECT_ID}}/terraform/state/{{.TF_CLI_STATE_NAME}}"
+
+  TF_CLI_PLAN_DIR: "{{.ROOT_DIR}}/tmp/tf"
+  TF_CLI_ENVS_DIR: "{{.ROOT_DIR}}/tf/environments"
+  TF_CLI_TEMPLATES_DIR: "tf/templates"
+  TF_CLI_STACKS_DIR: "tf/definitions"
+  TF_CLI_WORKING_DIR: "{{.TF_CLI_STACKS_DIR}}/{{.STACK}}"
+  TF_CLI_CHDIR_OPT: "-chdir={{.TF_CLI_WORKING_DIR}}"
+
+  TF_CLI_PLAN_PATH: "{{.TF_CLI_PLAN_DIR}}/{{.TF_CLI_STATE_NAME}}.tfplan"
+  TF_CLI_PLAN_OPT: "-out={{.TF_CLI_PLAN_PATH}}"
+  TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.ENV}}' -var='variant={{.VARIANT}}'"
+  TF_CLI_VAR_FILES_OPT: "-var-file={{.TF_CLI_ENVS_DIR}}/all/{{.STACK}}.tfvars -var-file={{.TF_CLI_ENVS_DIR}}/{{.ENV}}/{{.STACK}}.tfvars"
+
+  STACK_ENVS: all,dev,prod,staging,test
+
+env:
+  TF_HTTP_ADDRESS: "{{.TF_CLI_HTTP_BACKEND_ADDRESS}}"
+  TF_HTTP_LOCK_ADDRESS: "{{.TF_CLI_HTTP_BACKEND_ADDRESS}}/lock"
+  TF_HTTP_UNLOCK_ADDRESS: "{{.TF_CLI_HTTP_BACKEND_ADDRESS}}/lock"
+
+tasks:
+  apply:
+    desc: Apply stack
+    deps: [plan]
+    cmds:
+      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply {{.TF_CLI_PLAN_PATH}}"
+    requires:
+      vars: [ENV, STACK]
+
+  check-fmt:
+    desc: Check formatting of TF code for stack
+    cmds:
+      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt -check -diff -recursive"
+    requires:
+      vars: [STACK]
+
+  destroy:
+    desc: Destroy stack
+    cmds:
+      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
+    requires:
+      vars: [ENV, STACK]
+
+  fmt:
+    desc: Format code for stack
+    cmds:
+      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt"
+    requires:
+      vars: [STACK]
+
+  init:
+    desc: Init stack
+    cmds:
+      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} init {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
+    requires:
+      vars: [ENV, STACK]
+
+  new:
+    desc: Create new stack
+    cmds:
+      - cp -r "{{.TF_CLI_TEMPLATES_DIR}}/stack" "{{.TF_CLI_STACKS_DIR}}/{{.STACK}}"
+      - task: new-stack-envs
+    requires:
+      vars: [STACK]
+
+  plan:
+    desc: Create TF plan for stack
+    deps: [ensure-temp-dir]
+    cmds:
+      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} plan {{.TF_CLI_PLAN_OPT}} {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
+    requires:
+      vars: [ENV, STACK]
+
+  rm:
+    desc: Remove code for stack
+    cmds:
+      - rm -fr "{{.TF_CLI_STACKS_DIR}}/{{.STACK}}"
+      - task: rm-stack-envs
+    requires:
+      vars: [STACK]
+
+  shell:
+    desc: TF console for stack
+    interactive: true
+    cmds:
+      - terraform {{.TF_CLI_CHDIR_OPT}} console {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}
+    requires:
+      vars: [ENV, STACK]
+
+  validate:
+    desc: Validate stack
+    cmds:
+      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} validate"
+    requires:
+      vars: [STACK]
+
+  ## Internal tasks ##
+
+  new-stack-envs:
+    desc: Add environments for stack
+    internal: true
+    cmds:
+      - for: { var: STACK_ENVS, split: "," }
+        cmd: cp "{{.TF_CLI_TEMPLATES_DIR}}/environments/{{.ITEM}}.tfvars" "{{.TF_CLI_ENVS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+
+  rm-stack-envs:
+    desc: Remove environments for stack
+    internal: true
+    cmds:
+      - for: { var: STACK_ENVS, split: "," }
+        cmd: rm "{{.TF_CLI_ENVS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+
+  ensure-temp-dir:
+    desc: Ensure that temporary directory exists
+    internal: true
+    cmds:
+      - mkdir -p "{{.TF_CLI_PLAN_DIR}}"

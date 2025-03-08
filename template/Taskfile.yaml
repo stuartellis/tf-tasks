@@ -1,0 +1,24 @@
+---
+# SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
+#
+# SPDX-License-Identifier: MIT
+#
+# Configuration for the Task runner
+#
+# See: https://taskfile.dev
+
+version: "3"
+
+includes:
+  pre-commit: tasks/pre-commit
+  tf: tasks/tf
+
+tasks:
+  default:
+    cmds:
+      - task: list
+
+  list:
+    desc: List available tasks
+    cmds:
+      - task --list

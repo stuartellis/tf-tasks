@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
+#
+# SPDX-License-Identifier: MIT
+#
+# Exclusions for Prettier:
+#
+# See https://prettier.io/
+
+CHANGELOG.md
+.copier-*.yaml

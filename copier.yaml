@@ -17,6 +17,7 @@ _subdirectory: template
 _answers_file: .copier-answers-tf.yaml
 
 _skip_if_exists:
+  - Taskfile.yaml
   - tf
 
 project_name:

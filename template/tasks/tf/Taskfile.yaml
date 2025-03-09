@@ -9,6 +9,7 @@
 #
 # Requires these environment variables:
 #
+# CONTEXT
 # ENV
 # STACK
 # VARIANT
@@ -19,23 +20,22 @@ version: "3"
 vars:
   TF_CLI_EXE: terraform
 
-  TF_CLI_STATE_NAME: "{{.PRODUCT_NAME}}-{{.STACK}}-{{.ENV}}-{{.VARIANT}}"
-
   TF_CLI_BACKEND_FALSE_OPT: "-backend=false"
 
-  TF_CLI_PLAN_DIR: "{{.ROOT_DIR}}/tmp/tf"
-  TF_CLI_ENVS_DIR: "{{.ROOT_DIR}}/tf/environments"
-  TF_CLI_TEMPLATES_DIR: "tf/templates"
+  TF_CLI_STATE_NAME: "{{.PRODUCT_NAME}}-{{.STACK}}-{{.ENV}}-{{.VARIANT}}"
+
+  TF_CLI_TMP_DIR: "{{.ROOT_DIR}}/tmp/tf"
+  TF_CLI_CONTEXTS_DIR: "{{.ROOT_DIR}}/tf/contexts"
+  STACK_CONTEXTS: dev,prod,staging,test
   TF_CLI_STACKS_DIR: "tf/definitions"
+  TF_CLI_TEMPLATES_DIR: "tf/templates"
   TF_CLI_WORKING_DIR: "{{.TF_CLI_STACKS_DIR}}/{{.STACK}}"
   TF_CLI_CHDIR_OPT: "-chdir={{.TF_CLI_WORKING_DIR}}"
 
-  TF_CLI_PLAN_PATH: "{{.TF_CLI_PLAN_DIR}}/{{.TF_CLI_STATE_NAME}}.tfplan"
+  TF_CLI_PLAN_PATH: "{{.TF_CLI_TMP_DIR}}/{{.TF_CLI_STATE_NAME}}.tfplan"
   TF_CLI_PLAN_OPT: "-out={{.TF_CLI_PLAN_PATH}}"
   TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.ENV}}' -var='variant={{.VARIANT}}'"
-  TF_CLI_VAR_FILES_OPT: "-var-file={{.TF_CLI_ENVS_DIR}}/all/{{.STACK}}.tfvars -var-file={{.TF_CLI_ENVS_DIR}}/{{.ENV}}/{{.STACK}}.tfvars"
-
-  STACK_ENVS: all,dev,prod,staging,test
+  TF_CLI_VAR_FILES_OPT: "-var-file={{.TF_CLI_CONTEXTS_DIR}}/all/{{.STACK}}.tfvars -var-file={{.TF_CLI_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.STACK}}.tfvars"
 
 tasks:
   apply:
@@ -44,7 +44,7 @@ tasks:
     cmds:
       - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply {{.TF_CLI_PLAN_PATH}}"
     requires:
-      vars: [ENV, STACK]
+      vars: [CONTEXT, STACK]
 
   check-fmt:
     desc: Check formatting of TF code for stack
@@ -53,12 +53,22 @@ tasks:
     requires:
       vars: [STACK]
 
+  console:
+    desc: TF console for stack
+    aliases:
+      - shell
+    interactive: true
+    cmds:
+      - terraform {{.TF_CLI_CHDIR_OPT}} console {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}
+    requires:
+      vars: [CONTEXT, STACK, VARIANT]
+
   destroy:
     desc: Destroy stack
     cmds:
       - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [ENV, STACK]
+      vars: [CONTEXT, STACK, VARIANT]
 
   fmt:
     desc: Format code for stack
@@ -72,7 +82,7 @@ tasks:
     cmds:
       - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} init {{.TF_CLI_BACKEND_OPT}}"
     requires:
-      vars: [ENV, STACK]
+      vars: [CONTEXT, STACK]
     vars:
       TF_CLI_BACKEND_OPT:
         sh: echo {{.TF_CLI_BACKEND_FALSE_OPT}}
@@ -80,8 +90,8 @@ tasks:
   new:
     desc: Create new stack
     cmds:
-      - cp -r "{{.TF_CLI_TEMPLATES_DIR}}/stack" "{{.TF_CLI_STACKS_DIR}}/{{.STACK}}"
-      - task: new-stack-envs
+      - cp -r "{{.TF_CLI_TEMPLATES_DIR}}/definition" "{{.TF_CLI_STACKS_DIR}}/{{.STACK}}"
+      - task: new-stack-contexts
     requires:
       vars: [STACK]
 
@@ -91,32 +101,22 @@ tasks:
     cmds:
       - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} plan {{.TF_CLI_PLAN_OPT}} {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [ENV, STACK]
+      vars: [CONTEXT, STACK, VARIANT]
 
   rm:
     desc: Remove code for stack
     cmds:
       - rm -fr "{{.TF_CLI_STACKS_DIR}}/{{.STACK}}"
-      - task: rm-stack-envs
+      - task: rm-stack-contexts
     requires:
       vars: [STACK]
-
-  shell:
-    desc: TF console for stack
-    aliases:
-      - console
-    interactive: true
-    cmds:
-      - terraform {{.TF_CLI_CHDIR_OPT}} console {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}
-    requires:
-      vars: [ENV, STACK]
 
   test:
     desc: Run test for TF stack
     cmds:
       - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} test {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [ENV, STACK]
+      vars: [CONTEXT, STACK, VARIANT]
 
   validate:
     desc: Validate stack
@@ -127,22 +127,33 @@ tasks:
 
   ## Internal tasks ##
 
-  new-stack-envs:
-    desc: Add environments for stack
+  new-stack-contexts:
+    desc: Add contexts for stack
     internal: true
     cmds:
-      - for: { var: STACK_ENVS, split: "," }
-        cmd: cp "{{.TF_CLI_TEMPLATES_DIR}}/environments/{{.ITEM}}.tfvars" "{{.TF_CLI_ENVS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+      - task: ensure-context-dirs
+      - cmd: cp "{{.TF_CLI_TEMPLATES_DIR}}/contexts/all.tfvars" "{{.TF_CLI_CONTEXTS_DIR}}/all/{{.STACK}}.tfvars"
+      - for: { var: STACK_CONTEXTS, split: "," }
+        cmd: cp "{{.TF_CLI_TEMPLATES_DIR}}/contexts/standard.tfvars" "{{.TF_CLI_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
 
-  rm-stack-envs:
-    desc: Remove environments for stack
+  rm-stack-contexts:
+    desc: Remove contexts for stack
     internal: true
     cmds:
-      - for: { var: STACK_ENVS, split: "," }
-        cmd: rm "{{.TF_CLI_ENVS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+      - cmd: rm "{{.TF_CLI_CONTEXTS_DIR}}/all/{{.STACK}}.tfvars"
+      - for: { var: STACK_CONTEXTS, split: "," }
+        cmd: rm "{{.TF_CLI_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+
+  ensure-context-dirs:
+    desc: Ensure that context directories exists for TF
+    internal: true
+    cmds:
+      - cmd: mkdir -p "{{.TF_CLI_CONTEXTS_DIR}}/all"
+      - for: { var: STACK_CONTEXTS, split: "," }
+        cmd: mkdir -p "{{.TF_CLI_CONTEXTS_DIR}}/{{.ITEM}}"
 
   ensure-temp-dir:
-    desc: Ensure that temporary directory exists
+    desc: Ensure that temporary directory exists for TF
     internal: true
     cmds:
-      - mkdir -p "{{.TF_CLI_PLAN_DIR}}"
+      - mkdir -p "{{.TF_CLI_TMP_DIR}}"

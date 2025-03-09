@@ -16,6 +16,9 @@ _subdirectory: template
 # Name of the answers file
 _answers_file: .copier-answers-tf.yaml
 
+_skip_if_exists:
+  - tf
+
 project_name:
   type: str
   help: Your project name

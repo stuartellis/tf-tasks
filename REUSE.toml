@@ -36,6 +36,24 @@ SPDX-FileCopyrightText = "Stuart Ellis"
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
+path = "template/.terraform-version.jinja"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Stuart Ellis"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "template/tf/contexts/**/*.json"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Stuart Ellis"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "template/tf/templates/context/context.json"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Stuart Ellis"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
 path = "uv.lock"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Stuart Ellis"

@@ -1,0 +1,12 @@
+{
+  "backend_s3": {
+    "tfstate_bucket": "",
+    "tfstate_ddb_table": "",
+    "tfstate_dir": "",
+    "region": "eu-west-2",
+    "role_arn": ""
+  },
+  "metadata": {
+    "environment": "staging"
+  }
+}

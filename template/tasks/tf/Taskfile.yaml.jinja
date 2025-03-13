@@ -44,8 +44,8 @@ vars:
   TF_CLI_CHDIR_OPT: "-chdir={{.TF_TOOLS_STACK_DIR}}"
   TF_CLI_VAR_FILES_OPT: "-var-file={{.TF_TOOLS_CONTEXTS_DIR}}/all/{{.STACK}}.tfvars -var-file={{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.STACK}}.tfvars"
 
-  TF_TOOLS_CONTEXTS: dev,prod,staging,test
-    sh: ls {{.TF_TOOLS_CONTEXTS_DIR}}
+  TF_TOOLS_CONTEXTS:
+    sh: ls -d {{.TF_TOOLS_CONTEXTS_DIR}}/*/ | xargs -n 1 basename
 
 tasks:
   apply:
@@ -71,6 +71,10 @@ tasks:
       - "rm -r {{.TF_TOOLS_STACK_DIR}}/.terraform"
     requires:
       vars: [STACK]
+
+  info:
+    cmds:
+      - echo {{.TF_TOOLS_CONTEXTS}}
 
   console:
     desc: TF console for stack
@@ -130,18 +134,6 @@ tasks:
       TF_CLI_BACKEND_OPT:
         sh: echo {{if .ST_REMOTE_BACKEND}}{{.TF_CLI_BACKEND_REMOTE_OPT}}{{else}}{{.TF_CLI_BACKEND_FALSE_OPT}}{{end}}
 
-  info:
-    desc: Info for stack
-    cmds:
-      - echo "{{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}"
-    requires:
-      vars: [CONTEXT, STACK]
-    vars:
-      TF_CLI_BACKEND_DOCUMENT:
-        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
-      TF_CLI_BACKEND_CONFIG:
-        ref: "fromJson .TF_CLI_BACKEND_DOCUMENT"
-
   new:
     desc: Create new stack
     cmds:
@@ -195,16 +187,6 @@ tasks:
 
   ## Internal tasks ##
 
-  ensure-context-dirs:
-    desc: Ensure that context directories exists for TF
-    internal: true
-    cmds:
-      - cmd: mkdir -p "{{.TF_TOOLS_CONTEXTS_DIR}}/all"
-      - for: { var: TF_TOOLS_CONTEXTS, split: "," }
-        cmd: mkdir -p "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}"
-      - for: { var: TF_TOOLS_CONTEXTS, split: "," }
-        cmd: cp "{{.TF_TOOLS_TEMPLATES_DIR}}/context/context.json" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}"
-
   ensure-tmp-dir:
     desc: Ensure that temporary directory exists for TF
     internal: true
@@ -215,7 +197,6 @@ tasks:
     desc: Add context files for stack
     internal: true
     cmds:
-      - task: ensure-context-dirs
       - cmd: cp "{{.TF_TOOLS_TEMPLATES_DIR}}/context/all.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/all/{{.STACK}}.tfvars"
       - for: { var: TF_TOOLS_CONTEXTS, split: "," }
         cmd: cp "{{.TF_TOOLS_TEMPLATES_DIR}}/context/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"

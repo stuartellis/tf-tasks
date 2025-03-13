@@ -36,7 +36,7 @@ SPDX-FileCopyrightText = "Stuart Ellis"
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
-path = "template/.terraform-version"
+path = "template/.terraform-version.jinja"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Stuart Ellis"
 SPDX-License-Identifier = "MIT"

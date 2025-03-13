@@ -27,13 +27,12 @@
 #
 # Toggles apply if set, regardless of the value that they contain.
 #
+# yamllint disable rule:line-length
 
 version: "3"
 
 vars:
   TF_CLI_EXE: terraform
-
-  TF_TOOLS_CONTEXTS: dev,prod,staging,test
 
   TF_TOOLS_CONTEXTS_DIR: "{{.ROOT_DIR}}/tf/contexts"
   TF_TOOLS_STACKS_DIR: "{{.ROOT_DIR}}/tf/definitions"
@@ -43,8 +42,10 @@ vars:
 
   TF_CLI_BACKEND_FALSE_OPT: "-backend=false"
   TF_CLI_CHDIR_OPT: "-chdir={{.TF_TOOLS_STACK_DIR}}"
-  TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.ENV}}' -var='variant={{.VARIANT}}'"
   TF_CLI_VAR_FILES_OPT: "-var-file={{.TF_TOOLS_CONTEXTS_DIR}}/all/{{.STACK}}.tfvars -var-file={{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.STACK}}.tfvars"
+
+  TF_TOOLS_CONTEXTS: dev,prod,staging,test
+    sh: ls {{.TF_TOOLS_CONTEXTS_DIR}}
 
 tasks:
   apply:
@@ -80,6 +81,12 @@ tasks:
       - terraform {{.TF_CLI_CHDIR_OPT}} console {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}
     requires:
       vars: [CONTEXT, PRODUCT_NAME, STACK, VARIANT]
+    vars:
+      TF_TOOLS_CONTEXT_DOCUMENT:
+        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
+      TF_TOOLS_CONTEXT_CONFIG:
+        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
+      TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.VARIANT}}'"
 
   destroy:
     desc: Destroy resources for stack
@@ -87,6 +94,12 @@ tasks:
       - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
     requires:
       vars: [CONTEXT, PRODUCT_NAME, STACK, VARIANT]
+    vars:
+      TF_TOOLS_CONTEXT_DOCUMENT:
+        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
+      TF_TOOLS_CONTEXT_CONFIG:
+        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
+      TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.VARIANT}}'"
 
   fmt:
     desc: Format code for stack
@@ -146,6 +159,11 @@ tasks:
       vars: [CONTEXT, PRODUCT_NAME, STACK, VARIANT]
     vars:
       TF_CLI_PLAN_PATH: "{{.TF_TOOLS_TMP_DIR}}/{{.PRODUCT_NAME}}-{{.STACK}}-{{.ENV}}-{{.VARIANT}}.tfplan"
+      TF_TOOLS_CONTEXT_DOCUMENT:
+        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
+      TF_TOOLS_CONTEXT_CONFIG:
+        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
+      TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.VARIANT}}'"
 
   rm:
     desc: Remove code for stack
@@ -161,6 +179,12 @@ tasks:
       - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} test {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
     requires:
       vars: [CONTEXT, PRODUCT_NAME, STACK, VARIANT]
+    vars:
+      TF_TOOLS_CONTEXT_DOCUMENT:
+        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
+      TF_TOOLS_CONTEXT_CONFIG:
+        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
+      TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.VARIANT}}'"
 
   validate:
     desc: Validate stack

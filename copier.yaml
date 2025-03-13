@@ -76,3 +76,7 @@ copyright_date:
   type: str
   help: The copyright date
   default: "{{ current_year }}"
+
+tf_version:
+  type: str
+  help: Version of TF for project

@@ -10,6 +10,8 @@ SPDX-License-Identifier: MIT
 
 This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a Terraform or OpenTofu project.
 
+It uses [Task](https://taskfile.dev) as the task runner for the project.
+
 ## Install
 
 You need [Copier](https://copier.readthedocs.io/en/stable/) to use this template.
@@ -33,6 +35,12 @@ To update a project again with this template, run these commands:
 ```shell
 cd your-project-name
 copier update -a .copier-answers-python.yaml .
+```
+
+To see a list of the available tasks, enter _task_ in a terminal window:
+
+```shell
+task
 ```
 
 ## Contributing

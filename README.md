@@ -8,13 +8,13 @@ SPDX-License-Identifier: MIT
 
 [![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-grayscale-inverted-border-orange.json)](https://github.com/copier-org/copier) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier) [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a Terraform or OpenTofu project.
+This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) project.
 
-It uses [Task](https://taskfile.dev) as the task runner for the project.
+It uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects.
 
 ## Install
 
-You need [Copier](https://copier.readthedocs.io/en/stable/) to use this template.
+You need [Copier](https://copier.readthedocs.io/en/stable/) to create a project with this template.
 
 Use [uv](https://docs.astral.sh/uv/) or [pipx](https://pipx.pypa.io/) to install Copier. For example, run this command to install Copier with _uv_:
 
@@ -22,22 +22,31 @@ Use [uv](https://docs.astral.sh/uv/) or [pipx](https://pipx.pypa.io/) to install
 uv tool install copier
 ```
 
+To use the tasks in a generated project you need:
+
+- [Git](https://git-scm.com/)
+- A UNIX shell, such as Bash
+- [Task](https://taskfile.dev)
+- [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/)
+
+The tasks do not require Python. This means that they can be run in a restricted environment, such as a continuous integration job.
+
 ## Usage
 
 To create a project with this template, use the _copy_ sub-command:
 
 ```shell
-copier copy git+https://github.com/stuartellis/copier-sve-python your-project-name
+copier copy git+https://github.com/stuartellis/copier-sve-tf your-project-name
 ```
 
 To update a project again with this template, run these commands:
 
 ```shell
 cd your-project-name
-copier update -a .copier-answers-python.yaml .
+copier update -a .copier-answers-tf.yaml .
 ```
 
-To see a list of the available tasks, enter _task_ in a terminal window:
+To see a list of the available tasks in a project, enter _task_ in a terminal window:
 
 ```shell
 task

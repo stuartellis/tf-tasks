@@ -1,0 +1,60 @@
+---
+# SPDX-FileCopyrightText: [[ copyright_date ]]-present [[ maintainer_fullname ]] <[[ maintainer_email ]]>
+#
+# SPDX-License-Identifier: MIT
+#
+# Terraform and OpenTofu setup tasks for the Task runner:
+#
+# https://taskfile.dev
+#
+# Requirements:
+#
+# - Git
+# - POSIX shell
+# - Terraform or OpenTofu
+#
+# Set these variables to override the defaults:
+#
+# PRODUCT_NAME - Name of project
+# TF_CLI_EXE - The Terraform or OpenTofu executable to use
+#
+# yamllint disable rule:line-length
+
+version: "3"
+
+## Variables ##
+
+vars:
+  # Defaults
+  DEFAULT_TF_CLI_EXE: terraform
+  DEFAULT_PRODUCT_NAME:
+    ref: "base .ROOT_DIR"
+
+  # Variables to override
+
+  # Override with TF_CLI_EXE to specify the Terraform or OpenTofu executable
+  # To use OpenTofu, specify: TF_CLI_EXE=tofu
+  CURRENT_TF_CLI_EXE:
+    ref: "default .DEFAULT_TF_CLI_EXE .TF_CLI_EXE"
+  # Override with PRODUCT_NAME to specify the name of the product or project
+  CURRENT_PRODUCT_NAME:
+    ref: "default .DEFAULT_PRODUCT_NAME .PRODUCT_NAME"
+
+  # Calculated variables
+
+  TF_TOOLS_CONTEXTS_DIR: "{{.ROOT_DIR}}/tf/contexts"
+  TF_TOOLS_MODULES_DIR: "{{.ROOT_DIR}}/tf/modules"
+  TF_TOOLS_STACKS_DIR: "{{.ROOT_DIR}}/tf/definitions"
+  TF_TOOLS_TMP_DIR: "{{.ROOT_DIR}}/tmp/tf"
+
+## Tasks ##
+
+tasks:
+
+  bootstrap:
+    desc: Prepare project for TF
+    cmds:
+      - mkdir -p "{{.TF_TOOLS_CONTEXTS_DIR}}/all"
+      - mkdir -p {{.TF_TOOLS_MODULES_DIR}}
+      - mkdir -p {{.TF_TOOLS_STACKS_DIR}}
+      - mkdir -p {{.TF_TOOLS_TMP_DIR}}

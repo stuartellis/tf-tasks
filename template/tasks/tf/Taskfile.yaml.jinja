@@ -60,23 +60,34 @@ vars:
   CURRENT_TF_REMOTE_BACKEND:
     ref: "default false .ST_REMOTE_BACKEND"
 
+  # Pre-set variables
+  TF_TOOLS_SHARED_CONTEXT: all
+  TF_TOOLS_TEMPLATE_NAME: template
+
   # Calculated variables
 
   TF_TOOLS_CONTEXTS_DIR: "{{.ROOT_DIR}}/tf/contexts"
   TF_TOOLS_STACKS_DIR: "{{.ROOT_DIR}}/tf/definitions"
   TF_TOOLS_STACK_DIR: "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
-  TF_TOOLS_TEMPLATES_DIR: "{{.ROOT_DIR}}/tf/templates"
   TF_TOOLS_TMP_DIR: "{{.ROOT_DIR}}/tmp/tf"
 
   TF_CLI_BACKEND_FALSE_OPT: "-backend=false"
   TF_CLI_CHDIR_OPT: "-chdir={{.TF_TOOLS_STACK_DIR}}"
-  TF_CLI_VAR_FILES_OPT: "-var-file={{.TF_TOOLS_CONTEXTS_DIR}}/all/{{.STACK}}.tfvars -var-file={{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.STACK}}.tfvars"
+  TF_CLI_VAR_FILES_OPT: "-var-file={{.TF_TOOLS_CONTEXTS_DIR}}/{{.TF_TOOLS_SHARED_CONTEXT}}/{{.STACK}}.tfvars -var-file={{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.STACK}}.tfvars"
 
   TF_TOOLS_CONTEXTS:
     sh: ls -d {{.TF_TOOLS_CONTEXTS_DIR}}/*/ | xargs -n 1 basename
+  TF_TOOLS_CONTEXTS_LIST:
+    ref: 'splitList "\n" .TF_TOOLS_CONTEXTS'
+  TF_TOOLS_FILTERED_CONTEXTS:
+    ref: "without .TF_TOOLS_CONTEXTS_LIST .TF_TOOLS_SHARED_CONTEXT .TF_TOOLS_TEMPLATE_NAME"
 
   TF_TOOLS_STACKS:
     sh: ls -d {{.TF_TOOLS_STACKS_DIR}}/*/ | xargs -n 1 basename
+  TF_TOOLS_STACKS_LIST:
+    ref: 'splitList "\n" .TF_TOOLS_STACKS'
+  TF_TOOLS_FILTERED_STACKS:
+    ref: "without .TF_TOOLS_STACKS_LIST .TF_TOOLS_TEMPLATE_NAME"
 
 env:
   TF_WORKSPACE: "{{.CURRENT_VARIANT}}"
@@ -100,8 +111,10 @@ tasks:
   check-fmt:
     desc: Check formatting of TF code for stack
     cmds:
-      - for: { var: TF_TOOLS_CONTEXTS, split: "\n" }
+      - for:
+          var: TF_TOOLS_FILTERED_CONTEXTS
         cmd: "{{.CURRENT_TF_CLI_EXE}} fmt -check -diff -recursive {{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+      - cmd: "{{.CURRENT_TF_CLI_EXE}} fmt -check -diff -recursive {{.TF_TOOLS_CONTEXTS_DIR}}/{{.TF_TOOLS_SHARED_CONTEXT}}/{{.STACK}}.tfvars"
       - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt -check -diff -recursive"
     requires:
       vars: [STACK]
@@ -135,7 +148,8 @@ tasks:
     desc: List contexts
     silent: true
     cmds:
-      - for: { var: TF_TOOLS_CONTEXTS, split: "\n" }
+      - for:
+          var: TF_TOOLS_FILTERED_CONTEXTS
         cmd: echo "{{.ITEM}}"
 
   destroy:
@@ -155,8 +169,10 @@ tasks:
     desc: Format code for TF stack
     cmds:
       - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt"
-      - for: { var: TF_TOOLS_CONTEXTS, split: "\n" }
+      - for:
+          var: TF_TOOLS_FILTERED_CONTEXTS
         cmd: "{{.CURRENT_TF_CLI_EXE}} fmt {{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+      - cmd: "{{.CURRENT_TF_CLI_EXE}} fmt {{.TF_TOOLS_CONTEXTS_DIR}}/{{.TF_TOOLS_SHARED_CONTEXT}}/{{.STACK}}.tfvars"
     requires:
       vars: [STACK]
 
@@ -186,10 +202,11 @@ tasks:
   new:
     desc: Create new TF stack
     cmds:
-      - mkdir -p "{{.TF_TOOLS_STACKS_DIR}}"
-      - cp -r "{{.TF_TOOLS_TEMPLATES_DIR}}/definition" "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
-      - for: { var: TF_TOOLS_CONTEXTS, split: "\n" }
-        cmd: cp "{{.TF_TOOLS_TEMPLATES_DIR}}/context/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+      - cp -r "{{.TF_TOOLS_STACKS_DIR}}/template" "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
+      - for:
+          var: TF_TOOLS_FILTERED_CONTEXTS
+        cmd: cp "{{.TF_TOOLS_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+      - cmd: cp "{{.TF_TOOLS_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.TF_TOOLS_SHARED_CONTEXT}}/{{.STACK}}.tfvars"
     requires:
       vars: [STACK]
 
@@ -213,7 +230,8 @@ tasks:
     desc: Remove code for TF stack
     cmds:
       - rm -fr "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
-      - for: { var: TF_TOOLS_CONTEXTS, split: "\n" }
+      - for:
+          var: TF_TOOLS_FILTERED_CONTEXTS
         cmd: rm -f "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
     requires:
       vars: [STACK]
@@ -222,7 +240,8 @@ tasks:
     desc: List TF stacks
     silent: true
     cmds:
-      - for: { var: TF_TOOLS_STACKS, split: "\n" }
+      - for:
+          var: TF_TOOLS_FILTERED_STACKS
         cmd: echo "{{.ITEM}}"
 
   test:
@@ -251,9 +270,10 @@ tasks:
     desc: Create a new TF context
     cmds:
       - mkdir -p "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}"
-      - for: { var: TF_TOOLS_STACKS, split: "\n" }
-        cmd: cp "{{.TF_TOOLS_TEMPLATES_DIR}}/context/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.ITEM}}.tfvars"
-      - cp "{{.TF_TOOLS_TEMPLATES_DIR}}/context/context.json" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}"
+      - for:
+          var: TF_TOOLS_FILTERED_STACKS
+        cmd: cp "{{.TF_TOOLS_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.ITEM}}.tfvars"
+      - cp "{{.TF_TOOLS_CONTEXTS_DIR}}/template/context.json" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}"
     requires:
       vars: [CONTEXT]
 

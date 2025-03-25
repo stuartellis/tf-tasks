@@ -36,25 +36,12 @@ vars:
   # To use OpenTofu, specify: TF_CLI_EXE=tofu
   CURRENT_TF_CLI_EXE:
     ref: "default .DEFAULT_TF_CLI_EXE .TF_CLI_EXE"
-  # Override with PRODUCT_NAME to specify the name of the product or project
-  CURRENT_PRODUCT_NAME:
-    ref: "default .DEFAULT_PRODUCT_NAME .PRODUCT_NAME"
-
-  # Calculated variables
-
-  TF_TOOLS_CONTEXTS_DIR: "{{.ROOT_DIR}}/tf/contexts"
-  TF_TOOLS_MODULES_DIR: "{{.ROOT_DIR}}/tf/modules"
-  TF_TOOLS_STACKS_DIR: "{{.ROOT_DIR}}/tf/definitions"
-  TF_TOOLS_TMP_DIR: "{{.ROOT_DIR}}/tmp/tf"
 
 ## Tasks ##
 
 tasks:
 
-  bootstrap:
-    desc: Prepare project for TF
+  version:
+    desc: Version of TF
     cmds:
-      - mkdir -p "{{.TF_TOOLS_CONTEXTS_DIR}}/all"
-      - mkdir -p {{.TF_TOOLS_MODULES_DIR}}
-      - mkdir -p {{.TF_TOOLS_STACKS_DIR}}
-      - mkdir -p {{.TF_TOOLS_TMP_DIR}}
+      - echo {{.CURRENT_TF_CLI_EXE}} version

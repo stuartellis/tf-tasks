@@ -144,14 +144,6 @@ tasks:
         ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
       TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
 
-  contexts:
-    desc: List contexts
-    silent: true
-    cmds:
-      - for:
-          var: TF_TOOLS_FILTERED_CONTEXTS
-        cmd: echo "{{.ITEM}}"
-
   destroy:
     desc: Destroy resources for TF stack
     cmds:
@@ -236,14 +228,6 @@ tasks:
     requires:
       vars: [STACK]
 
-  stacks:
-    desc: List TF stacks
-    silent: true
-    cmds:
-      - for:
-          var: TF_TOOLS_FILTERED_STACKS
-        cmd: echo "{{.ITEM}}"
-
   test:
     desc: Run TF test for stack
     cmds:
@@ -266,6 +250,16 @@ tasks:
 
   ## Context tasks ##
 
+  context:list:
+    desc: List contexts
+    aliases:
+      - contexts
+    silent: true
+    cmds:
+      - for:
+          var: TF_TOOLS_FILTERED_CONTEXTS
+        cmd: echo "{{.ITEM}}"
+
   context:new:
     desc: Create a new TF context
     cmds:
@@ -283,3 +277,15 @@ tasks:
       - rm -fr "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}"
     requires:
       vars: [CONTEXT]
+
+  ## Stacks tasks ##
+
+  stack:list:
+    desc: List TF stacks
+    aliases:
+      - stacks
+    silent: true
+    cmds:
+      - for:
+          var: TF_TOOLS_FILTERED_STACKS
+        cmd: echo "{{.ITEM}}"

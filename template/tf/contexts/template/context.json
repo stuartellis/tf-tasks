@@ -3,10 +3,10 @@
     "tfstate_bucket": "",
     "tfstate_ddb_table": "",
     "tfstate_dir": "",
-    "region": "eu-west-2",
+    "region": "",
     "role_arn": ""
   },
   "metadata": {
-    "environment": "prod"
+    "environment": ""
   }
 }

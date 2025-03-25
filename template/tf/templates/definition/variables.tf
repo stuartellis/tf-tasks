@@ -6,3 +6,7 @@
 #
 # SPDX-License-Identifier: MIT
 #
+
+variable "tf_exec_role_arn" {
+  type = string
+}

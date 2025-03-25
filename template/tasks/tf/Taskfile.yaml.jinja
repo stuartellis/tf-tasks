@@ -18,7 +18,7 @@
 # CONTEXT - TF configuration
 # STACK - Name of stack
 #
-# These variables have defaults that you can override:
+# Set these variables to override the defaults:
 #
 # PRODUCT_NAME - Name of project
 # TF_CLI_EXE - The Terraform or OpenTofu executable to use
@@ -29,23 +29,33 @@
 # ST_REMOTE_BACKEND - Enables remote TF backend
 #
 # ST_REMOTE_BACKEND is true if set with any value.
-# Use the value "true" for consistency.
+# Use the value "true" for consistency: ST_REMOTE_BACKEND=true
 #
 # yamllint disable rule:line-length
 
 version: "3"
 
+## Variables ##
+
 vars:
+  # Defaults
+  DEFAULT_TF_CLI_EXE: terraform
+  DEFAULT_VARIANT: default
+  DEFAULT_PRODUCT_NAME:
+    ref: "base .ROOT_DIR"
 
   # Variables to override
 
-  # Override to specify the Terraform or OpenTofu executable
-  # To use OpenTofu, specify: tofu
-  TF_CLI_EXE: terraform
-  # Override to specify the name of the TF workspace
-  VARIANT: default
-  # Override to specify the name of the product or project
-  PRODUCT_NAME: {{base .ROOT_DIR}}
+  # Override with TF_CLI_EXE to specify the Terraform or OpenTofu executable
+  # To use OpenTofu, specify: TF_CLI_EXE=tofu
+  CURRENT_TF_CLI_EXE:
+    ref: "default .DEFAULT_TF_CLI_EXE .TF_CLI_EXE"
+  # Override with VARIANT to specify the name of the TF workspace
+  CURRENT_VARIANT:
+    ref: "default .DEFAULT_VARIANT .VARIANT"
+  # Override with PRODUCT_NAME to specify the name of the product or project
+  CURRENT_PRODUCT_NAME:
+    ref: "default .DEFAULT_PRODUCT_NAME .PRODUCT_NAME"
 
   # Calculated variables
 
@@ -62,12 +72,14 @@ vars:
   TF_TOOLS_CONTEXTS:
     sh: ls -d {{.TF_TOOLS_CONTEXTS_DIR}}/*/ | xargs -n 1 basename
 
+## Tasks ##
+
 tasks:
   apply:
     desc: Apply TF stack
     deps: [plan]
     cmds:
-      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply {{.TF_CLI_PLAN_PATH}}"
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply {{.TF_CLI_PLAN_PATH}}"
     requires:
       vars: [CONTEXT, STACK]
     vars:
@@ -75,14 +87,14 @@ tasks:
         sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
       TF_TOOLS_CONTEXT_CONFIG:
         ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_PLAN_PATH: "{{.TF_TOOLS_TMP_DIR}}/{{.PRODUCT_NAME}}-{{.STACK}}-{{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}-{{.VARIANT}}.tfplan"
+      TF_CLI_PLAN_PATH: "{{.TF_TOOLS_TMP_DIR}}/{{.CURRENT_PRODUCT_NAME}}-{{.STACK}}-{{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_VARIANT}}.tfplan"
 
   check-fmt:
     desc: Check formatting of TF code for stack
     cmds:
       - for: { var: TF_TOOLS_CONTEXTS, split: "\n" }
-        cmd: "{{.TF_CLI_EXE}} fmt -check -diff -recursive {{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
-      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt -check -diff -recursive"
+        cmd: "{{.CURRENT_TF_CLI_EXE}} fmt -check -diff -recursive {{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt -check -diff -recursive"
     requires:
       vars: [STACK]
 
@@ -101,13 +113,13 @@ tasks:
     cmds:
       - terraform {{.TF_CLI_CHDIR_OPT}} console {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}
     requires:
-      vars: [CONTEXT, PRODUCT_NAME, STACK, VARIANT]
+      vars: [CONTEXT, CURRENT_PRODUCT_NAME, STACK, CURRENT_VARIANT]
     vars:
       TF_TOOLS_CONTEXT_DOCUMENT:
         sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
       TF_TOOLS_CONTEXT_CONFIG:
         ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.VARIANT}}'"
+      TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
 
   contexts:
     desc: List contexts
@@ -119,22 +131,22 @@ tasks:
   destroy:
     desc: Destroy resources for TF stack
     cmds:
-      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [CONTEXT, PRODUCT_NAME, STACK, VARIANT]
+      vars: [CONTEXT, CURRENT_PRODUCT_NAME, STACK, CURRENT_VARIANT]
     vars:
       TF_TOOLS_CONTEXT_DOCUMENT:
         sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
       TF_TOOLS_CONTEXT_CONFIG:
         ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.VARIANT}}'"
+      TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
 
   fmt:
     desc: Format code for TF stack
     cmds:
-      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt"
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt"
       - for: { var: TF_TOOLS_CONTEXTS, split: "\n" }
-        cmd: "{{.TF_CLI_EXE}} fmt {{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+        cmd: "{{.CURRENT_TF_CLI_EXE}} fmt {{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
     requires:
       vars: [STACK]
 
@@ -142,7 +154,7 @@ tasks:
     desc: Init TF stack
     deps: [clean]
     cmds:
-      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} init {{.TF_CLI_BACKEND_OPT}}"
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} init {{.TF_CLI_BACKEND_OPT}}"
     requires:
       vars: [CONTEXT, STACK]
     vars:
@@ -157,14 +169,15 @@ tasks:
         -backend-config=region={{.TF_CLI_BACKEND_CONFIG.backend_s3.region}}
         -backend-config=bucket={{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}
         -backend-config=dynamodb_table={{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}
-        -backend-config=key=stacks/{{.PRODUCT_NAME}}/{{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.STACK}}.tfstate"
+        -backend-config=key=stacks/{{.CURRENT_PRODUCT_NAME}}/{{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.STACK}}.tfstate"
       TF_CLI_BACKEND_OPT:
         sh: echo {{if .ST_REMOTE_BACKEND}}{{.TF_CLI_BACKEND_REMOTE_OPT}}{{else}}{{.TF_CLI_BACKEND_FALSE_OPT}}{{end}}
 
   new:
     desc: Create new TF stack
     cmds:
-      - cp -r "{{.TF_TOOLS_TEMPLATES_DIR}}/definition/" "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
+      - mkdir -p "{{.TF_TOOLS_STACKS_DIR}}"
+      - cp -r "{{.TF_TOOLS_TEMPLATES_DIR}}/definition" "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
       - task: new-stack-contexts
     requires:
       vars: [STACK]
@@ -173,16 +186,16 @@ tasks:
     desc: Create TF plan for stack
     deps: [ensure-tmp-dir]
     cmds:
-      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} plan -out={{.TF_CLI_PLAN_PATH}} {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} plan -out={{.TF_CLI_PLAN_PATH}} {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [CONTEXT, PRODUCT_NAME, STACK, VARIANT]
+      vars: [CONTEXT, CURRENT_PRODUCT_NAME, STACK, CURRENT_VARIANT]
     vars:
       TF_TOOLS_CONTEXT_DOCUMENT:
         sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
       TF_TOOLS_CONTEXT_CONFIG:
         ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_PLAN_PATH: "{{.TF_TOOLS_TMP_DIR}}/{{.PRODUCT_NAME}}-{{.STACK}}-{{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}-{{.VARIANT}}.tfplan"
-      TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.VARIANT}}'"
+      TF_CLI_PLAN_PATH: "{{.TF_TOOLS_TMP_DIR}}/{{.CURRENT_PRODUCT_NAME}}-{{.STACK}}-{{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_VARIANT}}.tfplan"
+      TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
 
   rm:
     desc: Remove code for TF stack
@@ -205,20 +218,20 @@ tasks:
   test:
     desc: Run TF test for stack
     cmds:
-      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} test {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} test {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [CONTEXT, PRODUCT_NAME, STACK, VARIANT]
+      vars: [CONTEXT, CURRENT_PRODUCT_NAME, STACK, CURRENT_VARIANT]
     vars:
       TF_TOOLS_CONTEXT_DOCUMENT:
         sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
       TF_TOOLS_CONTEXT_CONFIG:
         ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_VARS_OPT: "-var='product_name={{.PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.VARIANT}}'"
+      TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
 
   validate:
     desc: Validate TF stack
     cmds:
-      - "{{.TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} validate"
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} validate"
     requires:
       vars: [STACK]
 

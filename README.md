@@ -8,27 +8,19 @@ SPDX-License-Identifier: MIT
 
 [![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-grayscale-inverted-border-orange.json)](https://github.com/copier-org/copier) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier) [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) project.
+This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) project. It uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects.
 
-It uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects.
+The tasks in the generated projects provide an opinionated set of tools for Terraform and OpenTofu. They use built-in features to support both multiple TF components in the same repository and deploying multiple instances of the same component.
 
-This tooling uses built-in features of Terraform to support both multiple components in the same repository and deploying multiple instances of the same component.
+Each of these infrastructure components is a separate TF root module. This tooling refers to these TF root modules as _stacks_.
 
-Each infrastructure component is a separate Terraform root module. The tooling refers to these Terraform root modules as _stacks_.
-
-This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy copies of the same stack in different environments or with different configuration. Each context is a directory that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies the settings for a TF remote backend and metadata.
+This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a directory that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies the settings for a TF remote backend and metadata.
 
 > The directory `tf/contexts/all/` also contains one `.tfvars` file per stack. The `.tfvars` file for a stack in the `all` directory is always used along with `.tfvars` for the current context.
 
 ## Install
 
-You need [Copier](https://copier.readthedocs.io/en/stable/) to add this template to a project.
-
-Use [uv](https://docs.astral.sh/uv/) or [pipx](https://pipx.pypa.io/) to install Copier. For example, run this command to install Copier with _uv_:
-
-```shell
-uv tool install copier
-```
+You need [Copier](https://copier.readthedocs.io/en/stable/) to add this template to a project. Use [uv](https://docs.astral.sh/uv/) or [pipx](https://pipx.pypa.io/) to run Copier. These tools enable you to use Copier without installing it.
 
 To use the tasks in a generated project you need:
 
@@ -37,21 +29,23 @@ To use the tasks in a generated project you need:
 - [Task](https://taskfile.dev)
 - [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/)
 
-The tasks do not require Python. This means that they can be run in a restricted CONTEXT, such as a continuous integration job.
+The tasks do not require Python. This means that they can be run in a restricted environment, such as a continuous integration job.
+
+> I recommend that you use a tool version manager to install copies of Terraform and OpenTofu. Consider using either [tenv](https://tofuutils.github.io/tenv/), which is specifically designed for TF tools, or the general-purpose [mise](https://mise.jdx.dev/) framework. The generated projects include a `.terraform-version` file for your tool version manager.
 
 ## Usage
 
-To either create a project with this template or add the template to an existing project, use the _copy_ sub-command:
+You can either create a new project with this template or add the template to an existing project. Use the same _copy_ sub-command of Copier for both cases. Run Copier with the _uvx_ or _pipx run_ commands, which download and cache software packages as needed. For example:
 
 ```shell
-copier copy git+https://github.com/stuartellis/copier-sve-tf your-project-name
+uvx copier copy git+https://github.com/stuartellis/copier-sve-tf your-project-name
 ```
 
 To update a project again with this template, run these commands:
 
 ```shell
 cd your-project-name
-copier update -a .copier-answers-tf.yaml .
+uvx copier update -a .copier-answers-tf.yaml .
 ```
 
 To see a list of the available tasks in a project, enter _task_ in a terminal window:
@@ -60,7 +54,7 @@ To see a list of the available tasks in a project, enter _task_ in a terminal wi
 task
 ```
 
-Tasks for Terraform stacks use the namespace `tf`. For example, `tf:new` creates the directories and files for a new stack:
+Tasks for TF stacks use the namespace `tf`. For example, `tf:new` creates the directories and files for a new stack:
 
 ```shell
 STACK=example_app task tf:new

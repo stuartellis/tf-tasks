@@ -14,7 +14,7 @@ _min_copier_version: "9"
 _subdirectory: template
 
 # Name of the answers file
-_answers_file: .copier-answers-tf.yaml
+_answers_file: .copier-answers-tf-tools.yaml
 
 # Use alternate template delimiters
 # This avoids conflicts with Task templating
@@ -43,17 +43,14 @@ project_description:
 maintainer_fullname:
   type: str
   help: Your full name
-  default: "Stuart Ellis"
 
 maintainer_email:
   type: str
   help: Your email
-  default: "stuart@stuartellis.name"
 
 maintainer_username:
   type: str
   help: Your username on the repository provider
-  default: stuartellis
 
 repository_provider:
   type: str
@@ -89,6 +86,6 @@ copyright_date:
   help: The copyright date
   default: "[[ current_year ]]"
 
-tf_version:
+terraform_version:
   type: str
-  help: Version of TF for project
+  help: Version of Terraform for project

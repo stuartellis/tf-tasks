@@ -5,7 +5,7 @@
 # Configuration for Python project
 
 [project]
-name = "copier-sve-tf"
+name = "copier-tf-tools"
 version = "0.13.0"
 description = "Copier template for Terraform and OpenTofu"
 readme = "README.md"

@@ -23,13 +23,11 @@
 # PRODUCT_NAME - Name of project
 # TF_CLI_EXE - The Terraform or OpenTofu executable to use
 # VARIANT - Name of TF workspace
+# TF_REMOTE_BACKEND - Enables remote TF backend
 #
-# Environment variable to toggle remote TF backend:
+# Set TF_REMOTE_BACKEND to "true" to use S3 as a backend:
 #
-# ST_REMOTE_BACKEND - Enables remote TF backend
-#
-# ST_REMOTE_BACKEND is true if set with any value.
-# Use the value "true" for consistency: ST_REMOTE_BACKEND=true
+# TF_REMOTE_BACKEND=true
 #
 # yamllint disable rule:line-length
 
@@ -56,9 +54,6 @@ vars:
   # Override with PRODUCT_NAME to specify the name of the product or project
   CURRENT_PRODUCT_NAME:
     ref: "default .DEFAULT_PRODUCT_NAME .PRODUCT_NAME"
-  # Override by declaring ST_REMOTE_BACKEND. This enables the remote TF backend.
-  CURRENT_TF_REMOTE_BACKEND:
-    ref: "default false .ST_REMOTE_BACKEND"
 
   # Pre-set variables
   TF_TOOLS_SHARED_CONTEXT: all
@@ -180,16 +175,17 @@ tasks:
         sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
       TF_CLI_BACKEND_CONFIG:
         ref: "fromJson .TF_CLI_BACKEND_DOCUMENT"
-      TF_CLI_BACKEND_S3_OPT: "-backend-config=encrypt=true
-        -backend-config=workspace_key_prefix=workspaces
-        -backend-config=role_arn={{.TF_CLI_BACKEND_CONFIG.backend_s3.role_arn}}
-        -backend-config=region={{.TF_CLI_BACKEND_CONFIG.backend_s3.region}}
-        -backend-config=bucket={{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}
-        -backend-config=dynamodb_table={{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}
-        -backend-config=key=stacks/{{.CURRENT_PRODUCT_NAME}}/{{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.STACK}}.tfstate"
+      TF_CLI_BACKEND_S3_OPT: >
+        -backend-config=\"encrypt=true\"
+        -backend-config=\"workspace_key_prefix=workspaces\"
+        -backend-config=\"assume_role={role_arn=\\\"{{.TF_CLI_BACKEND_CONFIG.backend_s3.role_arn}}\\\"}\"
+        -backend-config=\"region={{.TF_CLI_BACKEND_CONFIG.backend_s3.region}}\"
+        -backend-config=\"bucket={{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
+        -backend-config=\"dynamodb_table={{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
+        -backend-config=\"key=stacks/{{.CURRENT_PRODUCT_NAME}}/{{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.STACK}}.tfstate\"
       # This is currently hard-coded to use S3 as the remote TF backend
       TF_CLI_BACKEND_OPT:
-        sh: echo {{if .CURRENT_TF_REMOTE_BACKEND}}{{.TF_CLI_BACKEND_S3_OPT}}{{else}}{{.TF_CLI_BACKEND_FALSE_OPT}}{{end}}
+        sh: echo {{if eq .TF_REMOTE_BACKEND "true"}}{{.TF_CLI_BACKEND_S3_OPT}}{{else}}{{.TF_CLI_BACKEND_FALSE_OPT}}{{end}}
 
   new:
     desc: Create new TF stack
@@ -227,6 +223,16 @@ tasks:
         cmd: rm -f "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
     requires:
       vars: [STACK]
+
+  stacks:
+    desc: List TF stacks
+    aliases:
+      - stacks
+    silent: true
+    cmds:
+      - for:
+          var: TF_TOOLS_FILTERED_STACKS
+        cmd: echo "{{.ITEM}}"
 
   test:
     desc: Run TF test for stack
@@ -277,15 +283,3 @@ tasks:
       - rm -fr "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}"
     requires:
       vars: [CONTEXT]
-
-  ## Stacks tasks ##
-
-  stack:list:
-    desc: List TF stacks
-    aliases:
-      - stacks
-    silent: true
-    cmds:
-      - for:
-          var: TF_TOOLS_FILTERED_STACKS
-        cmd: echo "{{.ITEM}}"

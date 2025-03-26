@@ -7,9 +7,9 @@
 # See: https://reuse.software/
 
 version = 1
-SPDX-PackageName = "copier-sve-tf"
+SPDX-PackageName = "copier-tf-tools"
 SPDX-PackageSupplier = "Stuart Ellis <stuart@stuartellis.name>"
-SPDX-PackageDownloadLocation = "https://github.com/stuartellis/copier-sve-tf"
+SPDX-PackageDownloadLocation = "https://github.com/stuartellis/copier-tf-tools"
 
 [[annotations]]
 path = "CHANGELOG.md"

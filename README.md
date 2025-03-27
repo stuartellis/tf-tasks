@@ -53,7 +53,7 @@ cd your-project-name
 uvx copier update -A -a .copier-answers-tf-tools.yaml .
 ```
 
-> Updates only currently only change the Taskfile `tasks/tf/Taskfile.yaml`. By design, the Copier configuration for this template does not change the contents of the `tf/` directory once it has been created. 
+> Updates only currently only change the Taskfile `tasks/tf/Taskfile.yaml`. By design, the Copier configuration for this template does not change the contents of the `tf/` directory once it has been created.
 
 ## Usage
 

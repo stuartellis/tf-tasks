@@ -163,6 +163,15 @@ tasks:
     requires:
       vars: [STACK]
 
+  forget:
+    desc: Delete a variant from TF remote backend
+    cmds:
+      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} workspace delete {{.VARIANT}}"
+    requires:
+      vars: [STACK, VARIANT]
+    env:
+      TF_WORKSPACE: "{{.DEFAULT_VARIANT}}"
+
   init:
     desc: Init TF stack
     deps: [clean]

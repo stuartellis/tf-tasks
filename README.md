@@ -128,6 +128,7 @@ The variant feature uses TF workspaces. It sets the value of the tfvar `variant`
 | tf:console   | _terraform console_ for a stack                                                                   |
 | tf:destroy   | _terraform apply -destroy_ for a stack                                                            |
 | tf:fmt       | _terraform fmt_ for a stack                                                                       |
+| tf:forget    | _terraform workspace delete_ for a variant                                                        |
 | tf:init      | _terraform init_ for a stack                                                                      |
 | tf:new       | Add the source code for a new stack. Copies content from the _tf/definitions/template/_ directory |
 | tf:plan      | _terraform plan_ for a stack                                                                      |

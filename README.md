@@ -10,9 +10,9 @@ SPDX-License-Identifier: MIT
 
 This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) project. It uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects.
 
-The tasks in the generated projects provide an opinionated set of tools for Terraform and OpenTofu. These tasks use built-in features to support:
+The tasks in the generated projects provide an opinionated configuration for Terraform and OpenTofu. This configuration enables it to use built-in features of these tools to support:
 
-- Multiple TF components in the same repository
+- Multiple TF components in the same code repository
 - Multiple instances of the same TF component with different configurations
 - Temporary instances of a TF component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 
@@ -34,7 +34,7 @@ The project structure also includes a `tf/modules/` directory to hold TF modules
 
 By design, this tooling does not specify or enforce any dependencies between infrastructure components. If you need to execute changes in a particular order, specify that order in whichever system you use to carry out deployments.
 
-This tooling uses specific files and directories to avoid conflicts with other tools. It adds a `tf/` directory and the file `tasks/tf/Taskfile.yaml` to the project. It also adds a `Taskfile,yaml` to the root directory of the project if one does not already exist. Tasks generate a `tmp/tf/` directory for artifacts. It only changes the contents of the `tf/` and `tmp/tf/` directories.
+This tooling uses specific files and directories to avoid conflicts with other tools. It adds a `tf/` directory and the file `tasks/tf/Taskfile.yaml` to the project. It also adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project if these do not already exist. Tasks generate a `tmp/tf/` directory for artifacts. It only changes the contents of the `tf/` and `tmp/tf/` directories.
 
 ## Install
 
@@ -92,10 +92,10 @@ Set these variables to override the defaults:
 - `VARIANT` - The name of the active TF workspace
 - `TF_REMOTE_BACKEND` - Enables a remote TF backend
 
-By default, this tooling uses a local TF state file. We set `TF_REMOTE_BACKEND` to `true` to use S3 as the remote backend for TF:
+By default, this tooling uses S3 as the remote backend for TF. We set `TF_REMOTE_BACKEND` to `false` to a local TF state file:
 
 ```shell
-TF_REMOTE_BACKEND=true
+TF_REMOTE_BACKEND=false
 ```
 
 > This tooling currently only supports S3 as a remote TF backend.

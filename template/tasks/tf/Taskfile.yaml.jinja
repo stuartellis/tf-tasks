@@ -25,9 +25,9 @@
 # VARIANT - Name of TF workspace
 # TF_REMOTE_BACKEND - Enables remote TF backend
 #
-# Set TF_REMOTE_BACKEND to "true" to use S3 as a backend:
+# Set TF_REMOTE_BACKEND to "false" to use local backend:
 #
-# TF_REMOTE_BACKEND=true
+# TF_REMOTE_BACKEND=false
 #
 # yamllint disable rule:line-length
 
@@ -185,7 +185,7 @@ tasks:
         -backend-config=\"key=stacks/{{.CURRENT_PRODUCT_NAME}}/{{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.STACK}}.tfstate\"
       # This is currently hard-coded to use S3 as the remote TF backend
       TF_CLI_BACKEND_OPT:
-        sh: echo {{if eq .TF_REMOTE_BACKEND "true"}}{{.TF_CLI_BACKEND_S3_OPT}}{{else}}{{.TF_CLI_BACKEND_FALSE_OPT}}{{end}}
+        sh: echo {{if eq .TF_REMOTE_BACKEND "false"}}{{.TF_CLI_BACKEND_FALSE_OPT}}{{else}}{{.TF_CLI_BACKEND_S3_OPT}}{{end}}
 
   new:
     desc: Create new TF stack

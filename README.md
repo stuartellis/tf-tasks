@@ -20,9 +20,9 @@ The tasks in the generated projects provide an opinionated configuration for Ter
 
 ## How It Works
 
-First use Copier to either generate a new project, or add this tooling to an existing project. This tooling designed to avoid conflicts with other tools.
+First use Copier to either generate a new project, or to add this tooling to an existing project. This tooling designed to avoid conflicts with other technologies.
 
-Once you have the tooling in a project, you can use it to develop and manage infrastructure with Terraform or OpenTofu. It enables you to work with separate sets of TF infrastructure code. Each set of infrastructure code is a separate component.
+Once you have the tooling in a project, you can use it to develop and manage infrastructure with Terraform or OpenTofu. It enables you to work with multiple sets of TF infrastructure code in the same project. Each set of infrastructure code is a separate component.
 
 Each of the infrastructure components in the project is a separate TF root module. This tooling refers to these TF root modules as _stacks_. The project puts TF stacks in the directory `tf/definitions/`.
 
@@ -62,9 +62,9 @@ To use the tasks in a generated project you need:
 - [Git](https://git-scm.com/)
 - A UNIX shell, such as Bash or Fish
 - [Task](https://taskfile.dev)
-- [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/)
+- [Terraform](https://www.terraform.io/) 1.11 and above or [OpenTofu](https://opentofu.org/) 1.9 and above
 
-You only need Python to create projects from this template. The tasks in the template do not use Python. This means that they can be run in a restricted environment, such as a continuous integration job.
+You only need Python and Copier to create projects from this template. The tasks in the template do not use Python or Copier. This means that they can be run in a restricted environment, such as a continuous integration job.
 
 I recommend that you use a tool version manager to install copies of Terraform and OpenTofu. Consider using either [tenv](https://tofuutils.github.io/tenv/), which is specifically designed for TF tools, or the general-purpose [mise](https://mise.jdx.dev/) framework. The generated projects include a `.terraform-version` file so that your tool version manager can install the Terraform version that you specify.
 
@@ -107,6 +107,12 @@ CONTEXT=dev STACK=example_app task tf:plan
 CONTEXT=dev STACK=example_app task tf:apply
 ```
 
+By default, this tooling uses Terraform. To use OpenTofu, set `TF_CLI_EXE` as an environment variable, with the value `tofu`:
+
+```shell
+TF_CLI_EXE=tofu
+```
+
 ### Variants
 
 Specify `VARIANT` to create an alternate deployment of the same stack with the same context:
@@ -146,9 +152,9 @@ The variant feature uses TF workspaces. It sets the value of the tfvar `variant`
 
 ## Contributing
 
-This project was built for my personal use. I will accept suggestions and consider Pull Requests, but may decline anything that makes it less useful for me.
+This project was built for my personal use. I will consider suggestions and Pull Requests, but may decline anything that makes it less useful for my needs. You are welcome to fork this project.
 
-Configuration files for this project template are provided by my [baseline](https://github.com/stuartellis/copier-sve-baseline) Copier template. To synchronize a copy of this project template with the baseline template, run these commands:
+Some of the configuration files for this project template are provided by my [project baseline](https://github.com/stuartellis/copier-sve-baseline) Copier template. To synchronize a copy of this project template with the baseline template, run these commands:
 
 ```shell
 cd copier-sve-baseline

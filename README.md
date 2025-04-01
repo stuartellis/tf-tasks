@@ -122,7 +122,7 @@ CONTEXT=dev STACK=example_app VARIANT=feature1 task tf:plan
 CONTEXT=dev STACK=example_app VARIANT=feature1 task tf:apply
 ```
 
-The variant feature uses TF workspaces. It sets the value of the tfvar `variant` to the name of the variant. Use the `environment`, `stack` and `variant` tfvars to define resource names that are unique and do not conflict. The `tf:test` task generates random variant names that have the prefix `t-` to ensure that test copies of stacks do not conflict with other copies of the stack.
+The variant feature uses TF workspaces. It sets the value of the tfvar `variant` to the name of the variant. Use the `environment`, `stack` and `variant` tfvars to define resource names that are unique and do not conflict. The stack template generates random variant names that have the prefix `t-` to ensure that test copies of stacks do not conflict with other copies of the stack.
 
 ### Available `tf` Tasks
 

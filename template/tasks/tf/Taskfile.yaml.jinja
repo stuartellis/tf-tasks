@@ -56,15 +56,16 @@ vars:
     ref: "default .DEFAULT_PRODUCT_NAME .PRODUCT_NAME"
 
   # Pre-set variables
+  TF_TOOLS_ROOT_DIR: tf
   TF_TOOLS_SHARED_CONTEXT: all
   TF_TOOLS_TEMPLATE_NAME: template
 
   # Calculated variables
 
-  TF_TOOLS_CONTEXTS_DIR: "{{.ROOT_DIR}}/tf/contexts"
-  TF_TOOLS_STACKS_DIR: "{{.ROOT_DIR}}/tf/definitions"
+  TF_TOOLS_CONTEXTS_DIR: "{{.ROOT_DIR}}/{{.TF_TOOLS_ROOT_DIR}}/contexts"
+  TF_TOOLS_STACKS_DIR: "{{.ROOT_DIR}}/{{.TF_TOOLS_ROOT_DIR}}/definitions"
   TF_TOOLS_STACK_DIR: "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
-  TF_TOOLS_TMP_DIR: "{{.ROOT_DIR}}/tmp/tf"
+  TF_TOOLS_TMP_DIR: "{{.ROOT_DIR}}/tmp/{{.TF_TOOLS_ROOT_DIR}}"
 
   TF_CLI_BACKEND_FALSE_OPT: "-backend=false"
   TF_CLI_CHDIR_OPT: "-chdir={{.TF_TOOLS_STACK_DIR}}"

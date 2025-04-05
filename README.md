@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
 SPDX-License-Identifier: MIT
 -->
 
-# Copier Template for TF Tooling
+# Copier Template for TF Tools
 
 [![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-grayscale-inverted-border-orange.json)](https://github.com/copier-org/copier) [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
@@ -16,7 +16,7 @@ The tasks in the generated projects provide an opinionated configuration for Ter
 - Multiple instances of the same TF component with different configurations
 - Temporary instances of a TF component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 
-> This project always uses the identifier _TF_ or _tf_ where possible, rather than Terraform or OpenTofu. This enables you to use the same tasks and code with both tools.
+> This project uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior.
 
 ## How It Works
 
@@ -24,7 +24,7 @@ First use [Copier](https://copier.readthedocs.io/en/stable/) to either generate 
 
 Once you have the tooling in a project, you can use it to develop and manage infrastructure with Terraform or OpenTofu. It enables you to work with multiple sets of TF infrastructure code in the same project.
 
-You can define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _stacks_. The project puts TF stacks in the directory `tf/definitions/`.
+You can define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _stacks_. Each TF stack is a subdirectory in the directory `tf/definitions/`.
 
 This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a directory that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
 
@@ -34,7 +34,12 @@ The project structure also includes a `tf/modules/` directory to hold TF modules
 
 By design, this tooling does not specify or enforce any dependencies between infrastructure components. If you need to execute changes in a particular order, specify that order in whichever system you use to carry out deployments.
 
-This tooling uses specific files and directories to avoid conflicts with other tools. It adds a `tf/` directory and the file `tasks/tf/Taskfile.yaml` to the project. It also adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project if these do not already exist. Tasks generate a `tmp/tf/` directory for artifacts. It only changes the contents of the `tf/` and `tmp/tf/` directories.
+This tooling uses specific files and directories to avoid conflicts with other tools:
+
+- The template adds a `tf/` directory and the file `tasks/tf/Taskfile.yaml` to the project
+- The template adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project if these do not already exist.
+- Tasks generate a `tmp/tf/` directory for artifacts.
+- Tasks only change the contents of the `tf/` and `tmp/tf/` directories.
 
 ## Install
 
@@ -74,10 +79,10 @@ To see a list of the available tasks in a project, enter _task_ in a terminal wi
 task
 ```
 
-Tasks for TF stacks use the namespace `tf`. For example, `tf:new` creates the directories and files for a new stack:
+Tasks for TF stacks use the namespace `tf`. For example, `tft:new` creates the directories and files for a new stack:
 
 ```shell
-TFT_STACK=example-app task tf:new
+TFT_STACK=example-app task tft:new
 ```
 
 You need to set these environment variables to work on a stack:
@@ -103,8 +108,8 @@ TFT_REMOTE_BACKEND=false
 Specify `TFT_CONTEXT` to create a deployment of the stack with the configuration from the specified context:
 
 ```shell
-TFT_CONTEXT=dev TFT_STACK=example-app task tf:plan
-TFT_CONTEXT=dev TFT_STACK=example-app task tf:apply
+TFT_CONTEXT=dev TFT_STACK=example-app task tft:plan
+TFT_CONTEXT=dev TFT_STACK=example-app task tft:apply
 ```
 
 By default, this tooling uses Terraform. To use OpenTofu, set `TFT_CLI_EXE` as an environment variable, with the value `tofu`:
@@ -120,8 +125,8 @@ Use the variants feature to create copies of stacks for development and testing.
 Specify `TFT_VARIANT` to create a variant:
 
 ```shell
-TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tf:plan
-TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tf:apply
+TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tft:plan
+TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tft:apply
 ```
 
 The tooling automatically sets the value of the tfvar `variant` to the name of the variant.
@@ -138,33 +143,33 @@ Use the `environment`, `stack_name` and `variant` tfvars in your TF code to defi
 
 The code in the stack template includes the local `standard_prefix` to help you set unique names for resources.
 
-### Available `tf` Tasks
+### Available `tft` Tasks
 
-| Name         | Description                                                                                       |
-| ------------ | ------------------------------------------------------------------------------------------------- |
-| tf:apply     | _terraform apply_ for a stack\*                                                                   |
-| tf:check-fmt | Checks whether _terraform fmt_ would change the code for a stack                                  |
-| tf:clean     | Remove the generated files for a stack                                                            |
-| tf:console   | _terraform console_ for a stack\*                                                                 |
-| tf:destroy   | _terraform apply -destroy_ for a stack\*                                                          |
-| tf:fmt       | _terraform fmt_ for a stack                                                                       |
-| tf:forget    | _terraform workspace delete_ for a variant\*                                                      |
-| tf:init      | _terraform init_ for a stack                                                                      |
-| tf:new       | Add the source code for a new stack. Copies content from the _tf/definitions/template/_ directory |
-| tf:plan      | _terraform plan_ for a stack\*                                                                    |
-| tf:rm        | Delete the source code for a stack                                                                |
-| tf:test      | _terraform test_ for a stack\*                                                                    |
-| tf:validate  | _terraform validate_ for a stack\*                                                                |
+| Name          | Description                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| tft:apply     | _terraform apply_ for a stack\*                                                                   |
+| tft:check-fmt | Checks whether _terraform fmt_ would change the code for a stack                                  |
+| tft:clean     | Remove the generated files for a stack                                                            |
+| tft:console   | _terraform console_ for a stack\*                                                                 |
+| tft:destroy   | _terraform apply -destroy_ for a stack\*                                                          |
+| tft:fmt       | _terraform fmt_ for a stack                                                                       |
+| tft:forget    | _terraform workspace delete_ for a variant\*                                                      |
+| tft:init      | _terraform init_ for a stack                                                                      |
+| tft:new       | Add the source code for a new stack. Copies content from the _tf/definitions/template/_ directory |
+| tft:plan      | _terraform plan_ for a stack\*                                                                    |
+| tft:rm        | Delete the source code for a stack                                                                |
+| tft:test      | _terraform test_ for a stack\*                                                                    |
+| tft:validate  | _terraform validate_ for a stack\*                                                                |
 
-\*: These tasks require that you first run `tf:init` to [initialise](https://opentofu.org/docs/cli/commands/init/) the stack.
+\*: These tasks require that you first run `tft:init` to [initialise](https://opentofu.org/docs/cli/commands/init/) the stack.
 
-### Available `tf:context` Tasks
+### Available `tft:context` Tasks
 
-| Name            | Description                                                                  |
-| --------------- | ---------------------------------------------------------------------------- |
-| tf:context:list | List the contexts                                                            |
-| tf:context:new  | Add a new context. Copies content from the _tf/contexts/template/_ directory |
-| tf:context:rm   | Delete the directory for a context                                           |
+| Name             | Description                                                                  |
+| ---------------- | ---------------------------------------------------------------------------- |
+| tft:context:list | List the contexts                                                            |
+| tft:context:new  | Add a new context. Copies content from the _tf/contexts/template/_ directory |
+| tft:context:rm   | Delete the directory for a context                                           |
 
 ## Contributing
 

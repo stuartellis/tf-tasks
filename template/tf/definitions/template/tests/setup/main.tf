@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
 #
-# SPDX-License-Identifier: [[ license_type ]]
+# SPDX-License-Identifier: MIT
 
 terraform {
   required_version = "> 1.0.0"

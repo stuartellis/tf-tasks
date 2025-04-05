@@ -72,11 +72,6 @@ repository_name:
   help: Your repository name
   default: "[[ project_name ]]"
 
-license_type:
-  type: str
-  help: The SPDX identifier for the license
-  default: "MIT"
-
 copyright_holder:
   type: str
   help: The name of the person or entity that holds the copyright

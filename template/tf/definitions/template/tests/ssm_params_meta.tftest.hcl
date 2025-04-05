@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-present Stuart Ellis <stuart@stuartellis.name>
 #
-# SPDX-License-Identifier: [[ license_type ]]
+# SPDX-License-Identifier: MIT
 
 run "setup" {
   command = apply

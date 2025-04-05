@@ -92,13 +92,13 @@ Set these variables to override the defaults:
 - `TFT_VARIANT` - See the section on [variants](#variants)
 - `TFT_REMOTE_BACKEND` - Enables a remote TF backend
 
-By default, this tooling uses [remote state](https://opentofu.org/docs/language/state/remote/). Set `TFT_REMOTE_BACKEND` to `false` to use a local TF state file:
+By default, this tooling uses [remote state](https://opentofu.org/docs/language/state/remote/) with TF. Set `TFT_REMOTE_BACKEND` to `false` to use a local TF state file:
 
 ```shell
 TFT_REMOTE_BACKEND=false
 ```
 
-> This tooling currently only supports S3 as a remote TF backend.
+> This tooling currently only supports S3 for remote state.
 
 Specify `TFT_CONTEXT` to create a deployment of the stack with the configuration from the specified context:
 
@@ -128,9 +128,15 @@ The tooling automatically sets the value of the tfvar `variant` to the name of t
 
 Only set `TFT_VARIANT` when you want to create an alternate version of a stack. If you do not specify a variant name, TF uses the default workspace for state, and the value of the tfvar `variant` is `default`.
 
-The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of stacks do not conflict with other copies, the test in the stack template includes code to set the value of `variant` to a random string with the prefix `t-`.
+The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of stacks do not conflict with other copies, the test in the stack template includes code to set the value of `variant` to a random string with the prefix `tt`.
 
-Use the `environment`, `stack` and `variant` tfvars in your TF code to define resource names that are unique for each variant and do not conflict.
+### Resource Names
+
+Use the `environment`, `stack_name` and `variant` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
+
+> The test in the stack template includes code to set the value of `variant` to a random string with the prefix `tt`.
+
+The code in the stack template includes the local `standard_prefix` to help you set unique names for resources.
 
 ### Available `tf` Tasks
 
@@ -139,13 +145,13 @@ Use the `environment`, `stack` and `variant` tfvars in your TF code to define re
 | tf:apply     | _terraform apply_ for a stack\*                                                                   |
 | tf:check-fmt | Checks whether _terraform fmt_ would change the code for a stack                                  |
 | tf:clean     | Remove the generated files for a stack                                                            |
-| tf:console   | _terraform console_ for a stack                                                                   |
+| tf:console   | _terraform console_ for a stack\*                                                                 |
 | tf:destroy   | _terraform apply -destroy_ for a stack\*                                                          |
 | tf:fmt       | _terraform fmt_ for a stack                                                                       |
 | tf:forget    | _terraform workspace delete_ for a variant\*                                                      |
 | tf:init      | _terraform init_ for a stack                                                                      |
 | tf:new       | Add the source code for a new stack. Copies content from the _tf/definitions/template/_ directory |
-| tf:plan      | _terraform plan_ for a stack                                                                      |
+| tf:plan      | _terraform plan_ for a stack\*                                                                    |
 | tf:rm        | Delete the source code for a stack                                                                |
 | tf:test      | _terraform test_ for a stack\*                                                                    |
 | tf:validate  | _terraform validate_ for a stack\*                                                                |

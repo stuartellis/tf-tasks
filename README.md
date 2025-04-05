@@ -12,7 +12,7 @@ This [Copier](https://copier.readthedocs.io/en/stable/) template provides files 
 
 The tasks in the generated projects provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
-- Multiple TF components in the same code repository
+- Multiple TF components ([modules](https://opentofu.org/docs/language/modules/)) in the same code repository
 - Multiple instances of the same TF component with different configurations
 - Temporary instances of a TF component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 
@@ -20,13 +20,13 @@ The tasks in the generated projects provide an opinionated configuration for Ter
 
 ## How It Works
 
-First use Copier to either generate a new project, or to add this tooling to an existing project. This tooling designed to avoid conflicts with other technologies.
+First use [Copier](https://copier.readthedocs.io/en/stable/) to either generate a new project, or to add this tooling to an existing project. The tooling is designed to avoid conflicts with other technologies.
 
-Once you have the tooling in a project, you can use it to develop and manage infrastructure with Terraform or OpenTofu. It enables you to work with multiple sets of TF infrastructure code in the same project. Each set of infrastructure code is a separate component.
+Once you have the tooling in a project, you can use it to develop and manage infrastructure with Terraform or OpenTofu. It enables you to work with multiple sets of TF infrastructure code in the same project.
 
-Each of the infrastructure components in the project is a separate TF root module. This tooling refers to these TF root modules as _stacks_. The project puts TF stacks in the directory `tf/definitions/`.
+You can define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _stacks_. The project puts TF stacks in the directory `tf/definitions/`.
 
-This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a directory that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for a TF remote backend.
+This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a directory that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
 
 > The directory `tf/contexts/all/` also contains one `.tfvars` file per stack. The `.tfvars` file for a stack in the `all` directory is always used along with `.tfvars` for the current context. This enables you to share common tfvars across all of the contexts for a stack.
 
@@ -77,7 +77,7 @@ task
 Tasks for TF stacks use the namespace `tf`. For example, `tf:new` creates the directories and files for a new stack:
 
 ```shell
-TFT_STACK=example_app task tf:new
+TFT_STACK=example-app task tf:new
 ```
 
 You need to set these environment variables to work on a stack:
@@ -103,8 +103,8 @@ TFT_REMOTE_BACKEND=false
 Specify `TFT_CONTEXT` to create a deployment of the stack with the configuration from the specified context:
 
 ```shell
-TFT_CONTEXT=dev TFT_STACK=example_app task tf:plan
-TFT_CONTEXT=dev TFT_STACK=example_app task tf:apply
+TFT_CONTEXT=dev TFT_STACK=example-app task tf:plan
+TFT_CONTEXT=dev TFT_STACK=example-app task tf:apply
 ```
 
 By default, this tooling uses Terraform. To use OpenTofu, set `TFT_CLI_EXE` as an environment variable, with the value `tofu`:
@@ -118,29 +118,31 @@ TFT_CLI_EXE=tofu
 Specify `TFT_VARIANT` to create an alternate deployment of the same stack with the same context:
 
 ```shell
-TFT_CONTEXT=dev TFT_STACK=example_app TFT_VARIANT=feature1 task tf:plan
-TFT_CONTEXT=dev TFT_STACK=example_app TFT_VARIANT=feature1 task tf:apply
+TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tf:plan
+TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tf:apply
 ```
 
-The variant feature uses TF workspaces. It sets the value of the tfvar `variant` to the name of the variant. Use the `environment`, `stack` and `variant` tfvars to define resource names that are unique and do not conflict. The stack template generates random variant names that have the prefix `t-` to ensure that test copies of stacks do not conflict with other copies of the stack.
+The variant feature uses TF [workspaces](https://opentofu.org/docs/language/state/workspaces). It sets the value of the tfvar `variant` to the name of the variant. Use the `environment`, `stack` and `variant` tfvars to define resource names that are unique and do not conflict. The stack template generates random variant names that have the prefix `t-` to ensure that test copies of stacks do not conflict with other copies of the stack.
 
 ### Available `tf` Tasks
 
 | Name         | Description                                                                                       |
 | ------------ | ------------------------------------------------------------------------------------------------- |
-| tf:apply     | _terraform apply_ for a stack*                                                                     |
+| tf:apply     | _terraform apply_ for a stack\*                                                                   |
 | tf:check-fmt | Checks whether _terraform fmt_ would change the code for a stack                                  |
 | tf:clean     | Remove the generated files for a stack                                                            |
 | tf:console   | _terraform console_ for a stack                                                                   |
-| tf:destroy   | _terraform apply -destroy_ for a stack*                                                            |
+| tf:destroy   | _terraform apply -destroy_ for a stack\*                                                          |
 | tf:fmt       | _terraform fmt_ for a stack                                                                       |
-| tf:forget    | _terraform workspace delete_ for a variant*                                                        |
+| tf:forget    | _terraform workspace delete_ for a variant\*                                                      |
 | tf:init      | _terraform init_ for a stack                                                                      |
 | tf:new       | Add the source code for a new stack. Copies content from the _tf/definitions/template/_ directory |
 | tf:plan      | _terraform plan_ for a stack                                                                      |
 | tf:rm        | Delete the source code for a stack                                                                |
-| tf:test      | _terraform test_ for a stack* |
-| tf:validate  | _terraform validate_ for a stack* |
+| tf:test      | _terraform test_ for a stack\*                                                                    |
+| tf:validate  | _terraform validate_ for a stack\*                                                                |
+
+\*: These tasks require that you first run `tf:init` to [initialise](https://opentofu.org/docs/cli/commands/init/) the stack.
 
 ### Available `tf:context` Tasks
 
@@ -152,7 +154,7 @@ The variant feature uses TF workspaces. It sets the value of the tfvar `variant`
 
 ## Contributing
 
-This project was built for my personal use. I will consider suggestions and Pull Requests, but may decline anything that makes it less useful for my needs. You are welcome to fork this project.
+This project was built for my personal use. I will consider suggestions and Pull Requests, but I might decline anything that makes it less useful for my needs. You are welcome to fork this project.
 
 Some of the configuration files for this project template are provided by my [project baseline](https://github.com/stuartellis/copier-sve-baseline) Copier template. To synchronize a copy of this project template with the baseline template, run these commands:
 

@@ -89,10 +89,10 @@ Set these variables to override the defaults:
 
 - `TFT_PRODUCT_NAME` - The name of the project
 - `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
-- `TFT_VARIANT` - The name of the active TF workspace
+- `TFT_VARIANT` - See the section on [variants](#variants)
 - `TFT_REMOTE_BACKEND` - Enables a remote TF backend
 
-By default, this tooling uses S3 as the remote backend for TF. We set `TFT_REMOTE_BACKEND` to `false` to a local TF state file:
+By default, this tooling uses [remote state](https://opentofu.org/docs/language/state/remote/). Set `TFT_REMOTE_BACKEND` to `false` to use a local TF state file:
 
 ```shell
 TFT_REMOTE_BACKEND=false
@@ -115,14 +115,18 @@ TFT_CLI_EXE=tofu
 
 ### Variants
 
-Specify `TFT_VARIANT` to create an alternate deployment of the same stack with the same context:
+Use the variants feature to create copies of stacks for development and testing. This feature creates an alternate deployment of a stack with the same context. TF uses [workspaces](https://opentofu.org/docs/language/state/workspaces) to track the state of variants.
+
+Specify `TFT_VARIANT` to create a variant:
 
 ```shell
 TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tf:plan
 TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tf:apply
 ```
 
-The variant feature uses TF [workspaces](https://opentofu.org/docs/language/state/workspaces). It sets the value of the tfvar `variant` to the name of the variant. Use the `environment`, `stack` and `variant` tfvars to define resource names that are unique and do not conflict. The stack template generates random variant names that have the prefix `t-` to ensure that test copies of stacks do not conflict with other copies of the stack.
+The tooling automatically sets the value of the tfvar `variant` to the name of the variant. Use the `environment`, `stack` and `variant` tfvars to define resource names that are unique for each variant and do not conflict.
+
+The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of stacks do not conflict with other copies, the stack template includes code to set the `variant` as a random string with the prefix `t-` for each test run.
 
 ### Available `tf` Tasks
 

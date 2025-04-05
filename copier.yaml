@@ -74,7 +74,7 @@ repository_name:
 
 license_type:
   type: str
-  help: The SPDX identifier for the license type
+  help: The SPDX identifier for the license
   default: "MIT"
 
 copyright_holder:

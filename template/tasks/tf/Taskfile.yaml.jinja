@@ -96,7 +96,7 @@ tasks:
     cmds:
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply {{.TFT_CLI_PLAN_PATH}}.tfplan"
     requires:
-      vars: [TFT_CONTEXT, STACK]
+      vars: [TFT_CONTEXT, TFT_STACK]
     vars:
       TFT_CONTEXT_DOCUMENT:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
@@ -179,7 +179,7 @@ tasks:
     cmds:
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}}"
     requires:
-      vars: [TFT_CONTEXT, STACK]
+      vars: [TFT_CONTEXT, TFT_STACK]
     vars:
       TFT_CLI_BACKEND_DOCUMENT:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json

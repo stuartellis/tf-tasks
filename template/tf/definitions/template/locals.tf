@@ -6,3 +6,5 @@
 #
 # SPDX-License-Identifier: [[ license_type ]]
 #
+
+locals {}

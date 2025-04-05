@@ -15,19 +15,19 @@
 #
 # It requires these environment variables to work on a stack:
 #
-# CONTEXT - TF configuration
-# STACK - Name of stack
+# TFT_CONTEXT - TF configuration
+# TFT_STACK   - Name of stack
 #
 # Set these variables to override the defaults:
 #
-# PRODUCT_NAME - Name of project
-# TF_CLI_EXE - The Terraform or OpenTofu executable to use
-# VARIANT - Name of TF workspace
-# TF_REMOTE_BACKEND - Enables remote TF backend
+# TFT_PRODUCT_NAME - Name of project
+# TFT_CLI_EXE - The Terraform or OpenTofu executable to use
+# TFT_VARIANT - Name of TF workspace
+# TFT_REMOTE_BACKEND - Enables remote TF backend
 #
-# Set TF_REMOTE_BACKEND to "false" to use local backend:
+# Set TFT_REMOTE_BACKEND to "false" to use local backend:
 #
-# TF_REMOTE_BACKEND=false
+# TFT_REMOTE_BACKEND=false
 #
 # yamllint disable rule:line-length
 
@@ -37,56 +37,56 @@ version: "3"
 
 vars:
   # Defaults
-  DEFAULT_TF_CLI_EXE: terraform
-  DEFAULT_VARIANT: default
-  DEFAULT_PRODUCT_NAME:
+  DEFAULT_TFT_CLI_EXE: terraform
+  DEFAULT_TFT_VARIANT: default
+  DEFAULT_TFT_PRODUCT_NAME:
     ref: "base .ROOT_DIR"
 
   # Variables to override
 
-  # Override with TF_CLI_EXE to specify the Terraform or OpenTofu executable
-  # To use OpenTofu, specify: TF_CLI_EXE=tofu
-  CURRENT_TF_CLI_EXE:
-    ref: "default .DEFAULT_TF_CLI_EXE .TF_CLI_EXE"
-  # Override with VARIANT to specify the name of the TF workspace
-  CURRENT_VARIANT:
-    ref: "default .DEFAULT_VARIANT .VARIANT"
-  # Override with PRODUCT_NAME to specify the name of the product or project
-  CURRENT_PRODUCT_NAME:
-    ref: "default .DEFAULT_PRODUCT_NAME .PRODUCT_NAME"
+  # Override with TFT_CLI_EXE to specify the Terraform or OpenTofu executable
+  # To use OpenTofu, specify: TFT_CLI_EXE=tofu
+  CURRENT_TFT_CLI_EXE:
+    ref: "default .DEFAULT_TFT_CLI_EXE .TFT_CLI_EXE"
+  # Override with TFT_VARIANT to specify the name of the TF workspace
+  CURRENT_TFT_VARIANT:
+    ref: "default .DEFAULT_TFT_VARIANT .TFT_VARIANT"
+  # Override with TFT_PRODUCT_NAME to specify the name of the product or project
+  CURRENT_TFT_PRODUCT_NAME:
+    ref: "default .DEFAULT_TFT_PRODUCT_NAME .TFT_PRODUCT_NAME"
 
   # Pre-set variables
-  TF_TOOLS_ROOT_DIR: tf
-  TF_TOOLS_SHARED_CONTEXT: all
-  TF_TOOLS_TEMPLATE_NAME: template
+  TFT_ROOT_DIR: tf
+  TFT_SHARED_CONTEXT: all
+  TFT_TEMPLATE_NAME: template
 
   # Calculated variables
 
-  TF_TOOLS_CONTEXTS_DIR: "{{.ROOT_DIR}}/{{.TF_TOOLS_ROOT_DIR}}/contexts"
-  TF_TOOLS_STACKS_DIR: "{{.ROOT_DIR}}/{{.TF_TOOLS_ROOT_DIR}}/definitions"
-  TF_TOOLS_STACK_DIR: "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
-  TF_TOOLS_TMP_DIR: "{{.ROOT_DIR}}/tmp/{{.TF_TOOLS_ROOT_DIR}}"
+  TFT_CONTEXTS_DIR: "{{.ROOT_DIR}}/{{.TFT_ROOT_DIR}}/contexts"
+  TFT_STACKS_DIR: "{{.ROOT_DIR}}/{{.TFT_ROOT_DIR}}/definitions"
+  TFT_STACK_DIR: "{{.TFT_STACKS_DIR}}/{{.TFT_STACK}}"
+  TFT_TMP_DIR: "{{.ROOT_DIR}}/tmp/{{.TFT_ROOT_DIR}}"
 
-  TF_CLI_BACKEND_FALSE_OPT: "-backend=false"
-  TF_CLI_CHDIR_OPT: "-chdir={{.TF_TOOLS_STACK_DIR}}"
-  TF_CLI_VAR_FILES_OPT: "-var-file={{.TF_TOOLS_CONTEXTS_DIR}}/{{.TF_TOOLS_SHARED_CONTEXT}}/{{.STACK}}.tfvars -var-file={{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.STACK}}.tfvars"
+  TFT_CLI_BACKEND_FALSE_OPT: "-backend=false"
+  TFT_CLI_CHDIR_OPT: "-chdir={{.TFT_STACK_DIR}}"
+  TFT_CLI_VAR_FILES_OPT: "-var-file={{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_STACK}}.tfvars -var-file={{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/{{.TFT_STACK}}.tfvars"
 
-  TF_TOOLS_CONTEXTS:
-    sh: ls -d {{.TF_TOOLS_CONTEXTS_DIR}}/*/ | xargs -n 1 basename
-  TF_TOOLS_CONTEXTS_LIST:
-    ref: 'splitList "\n" .TF_TOOLS_CONTEXTS'
-  TF_TOOLS_FILTERED_CONTEXTS:
-    ref: "without .TF_TOOLS_CONTEXTS_LIST .TF_TOOLS_SHARED_CONTEXT .TF_TOOLS_TEMPLATE_NAME"
+  TFT_CONTEXTS:
+    sh: ls -d {{.TFT_CONTEXTS_DIR}}/*/ | xargs -n 1 basename
+  TFT_CONTEXTS_LIST:
+    ref: 'splitList "\n" .TFT_CONTEXTS'
+  TFT_FILTERED_TFT_CONTEXTS:
+    ref: "without .TFT_CONTEXTS_LIST .TFT_SHARED_CONTEXT .TFT_TEMPLATE_NAME"
 
-  TF_TOOLS_STACKS:
-    sh: ls -d {{.TF_TOOLS_STACKS_DIR}}/*/ | xargs -n 1 basename
-  TF_TOOLS_STACKS_LIST:
-    ref: 'splitList "\n" .TF_TOOLS_STACKS'
-  TF_TOOLS_FILTERED_STACKS:
-    ref: "without .TF_TOOLS_STACKS_LIST .TF_TOOLS_TEMPLATE_NAME"
+  TFT_STACKS:
+    sh: ls -d {{.TFT_STACKS_DIR}}/*/ | xargs -n 1 basename
+  TFT_STACKS_LIST:
+    ref: 'splitList "\n" .TFT_STACKS'
+  TFT_FILTERED_STACKS:
+    ref: "without .TFT_STACKS_LIST .TFT_TEMPLATE_NAME"
 
 env:
-  TF_WORKSPACE: "{{.CURRENT_VARIANT}}"
+  TF_WORKSPACE: "{{.CURRENT_TFT_VARIANT}}"
 
 ## Tasks ##
 
@@ -94,35 +94,35 @@ tasks:
   apply:
     desc: Apply TF stack
     cmds:
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply {{.TF_CLI_PLAN_PATH}}.tfplan"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply {{.TFT_CLI_PLAN_PATH}}.tfplan"
     requires:
-      vars: [CONTEXT, STACK]
+      vars: [TFT_CONTEXT, STACK]
     vars:
-      TF_TOOLS_CONTEXT_DOCUMENT:
-        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
-      TF_TOOLS_CONTEXT_CONFIG:
-        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_PLAN_PATH: "{{.TF_TOOLS_TMP_DIR}}/{{.CURRENT_PRODUCT_NAME}}-{{.STACK}}-{{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_VARIANT}}"
+      TFT_CONTEXT_DOCUMENT:
+        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
+      TFT_CONTEXT_CONFIG:
+        ref: "fromJson .TFT_CONTEXT_DOCUMENT"
+      TFT_CLI_PLAN_PATH: "{{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_STACK}}-{{.TFT_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_TFT_VARIANT}}"
 
   check-fmt:
     desc: Check formatting of TF code for stack
     cmds:
       - for:
-          var: TF_TOOLS_FILTERED_CONTEXTS
-        cmd: "{{.CURRENT_TF_CLI_EXE}} fmt -check -diff -recursive {{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
-      - cmd: "{{.CURRENT_TF_CLI_EXE}} fmt -check -diff -recursive {{.TF_TOOLS_CONTEXTS_DIR}}/{{.TF_TOOLS_SHARED_CONTEXT}}/{{.STACK}}.tfvars"
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt -check -diff -recursive"
+          var: TFT_FILTERED_TFT_CONTEXTS
+        cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_STACK}}.tfvars"
+      - cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_STACK}}.tfvars"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} fmt -check -diff -recursive"
     requires:
-      vars: [STACK]
+      vars: [TFT_STACK]
 
   clean:
     desc: Clean TF stack
     cmds:
-      - "rm -fr {{.TF_TOOLS_STACK_DIR}}/.terraform"
-      - "rm -f {{.TF_TOOLS_TMP_DIR}}/{{.CURRENT_PRODUCT_NAME}}-{{.STACK}}-*.tfplan"
-      - "rm -f {{.TF_TOOLS_TMP_DIR}}/{{.CURRENT_PRODUCT_NAME}}-{{.STACK}}-*.json"
+      - "rm -fr {{.TFT_STACK_DIR}}/.terraform"
+      - "rm -f {{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_STACK}}-*.tfplan"
+      - "rm -f {{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_STACK}}-*.json"
     requires:
-      vars: [STACK]
+      vars: [TFT_STACK]
 
   console:
     desc: TF console for stack
@@ -130,109 +130,109 @@ tasks:
       - shell
     interactive: true
     cmds:
-      - terraform {{.TF_CLI_CHDIR_OPT}} console {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}
+      - terraform {{.TFT_CLI_CHDIR_OPT}} console {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}
     requires:
-      vars: [CONTEXT, CURRENT_PRODUCT_NAME, STACK, CURRENT_VARIANT]
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_STACK, CURRENT_TFT_VARIANT]
     vars:
-      TF_TOOLS_CONTEXT_DOCUMENT:
-        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
-      TF_TOOLS_CONTEXT_CONFIG:
-        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
+      TFT_CONTEXT_DOCUMENT:
+        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
+      TFT_CONTEXT_CONFIG:
+        ref: "fromJson .TFT_CONTEXT_DOCUMENT"
+      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='stack_name={{.TFT_STACK}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_TFT_VARIANT}}'"
 
   destroy:
     desc: Destroy resources for TF stack
     cmds:
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [CONTEXT, CURRENT_PRODUCT_NAME, STACK, CURRENT_VARIANT]
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_STACK, CURRENT_TFT_VARIANT]
     vars:
-      TF_TOOLS_CONTEXT_DOCUMENT:
-        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
-      TF_TOOLS_CONTEXT_CONFIG:
-        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
+      TFT_CONTEXT_DOCUMENT:
+        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
+      TFT_CONTEXT_CONFIG:
+        ref: "fromJson .TFT_CONTEXT_DOCUMENT"
+      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='stack_name={{.TFT_STACK}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_TFT_VARIANT}}'"
 
   fmt:
     desc: Format code for TF stack
     cmds:
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} fmt"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} fmt"
       - for:
-          var: TF_TOOLS_FILTERED_CONTEXTS
-        cmd: "{{.CURRENT_TF_CLI_EXE}} fmt {{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
-      - cmd: "{{.CURRENT_TF_CLI_EXE}} fmt {{.TF_TOOLS_CONTEXTS_DIR}}/{{.TF_TOOLS_SHARED_CONTEXT}}/{{.STACK}}.tfvars"
+          var: TFT_FILTERED_TFT_CONTEXTS
+        cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt {{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_STACK}}.tfvars"
+      - cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt {{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_STACK}}.tfvars"
     requires:
-      vars: [STACK]
+      vars: [TFT_STACK]
 
   forget:
     desc: Delete a variant from TF remote backend
     cmds:
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} workspace delete {{.VARIANT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} workspace delete {{.TFT_VARIANT}}"
     requires:
-      vars: [STACK, VARIANT]
+      vars: [TFT_STACK, TFT_VARIANT]
     env:
-      TF_WORKSPACE: "{{.DEFAULT_VARIANT}}"
+      TF_WORKSPACE: "{{.DEFAULT_TFT_VARIANT}}"
 
   init:
     desc: Init TF stack
     deps: [clean]
     cmds:
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} init -input=false {{.TF_CLI_BACKEND_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}}"
     requires:
-      vars: [CONTEXT, STACK]
+      vars: [TFT_CONTEXT, STACK]
     vars:
-      TF_CLI_BACKEND_DOCUMENT:
-        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
-      TF_CLI_BACKEND_CONFIG:
-        ref: "fromJson .TF_CLI_BACKEND_DOCUMENT"
-      TF_CLI_BACKEND_S3_OPT: >
+      TFT_CLI_BACKEND_DOCUMENT:
+        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
+      TFT_CLI_BACKEND_CONFIG:
+        ref: "fromJson .TFT_CLI_BACKEND_DOCUMENT"
+      TFT_CLI_BACKEND_S3_OPT: >
         -backend-config=\"encrypt=true\"
         -backend-config=\"workspace_key_prefix=workspaces\"
-        -backend-config=\"assume_role={role_arn=\\\"{{.TF_CLI_BACKEND_CONFIG.backend_s3.role_arn}}\\\"}\"
-        -backend-config=\"region={{.TF_CLI_BACKEND_CONFIG.backend_s3.region}}\"
-        -backend-config=\"bucket={{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
-        -backend-config=\"dynamodb_table={{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
-        -backend-config=\"key=stacks/{{.CURRENT_PRODUCT_NAME}}/{{.TF_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.STACK}}.tfstate\"
+        -backend-config=\"assume_role={role_arn=\\\"{{.TFT_CLI_BACKEND_CONFIG.backend_s3.role_arn}}\\\"}\"
+        -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backend_s3.region}}\"
+        -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
+        -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
+        -backend-config=\"key=stacks/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_STACK}}.tfstate\"
       # This is currently hard-coded to use S3 as the remote TF backend
-      TF_CLI_BACKEND_OPT:
-        sh: echo {{if eq .TF_REMOTE_BACKEND "false"}}{{.TF_CLI_BACKEND_FALSE_OPT}}{{else}}{{.TF_CLI_BACKEND_S3_OPT}}{{end}}
+      TFT_CLI_BACKEND_OPT:
+        sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{.TFT_CLI_BACKEND_FALSE_OPT}}{{else}}{{.TFT_CLI_BACKEND_S3_OPT}}{{end}}
 
   new:
     desc: Create new TF stack
     cmds:
-      - cp -r "{{.TF_TOOLS_STACKS_DIR}}/template" "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
+      - cp -r "{{.TFT_STACKS_DIR}}/template" "{{.TFT_STACKS_DIR}}/{{.TFT_STACK}}"
       - for:
-          var: TF_TOOLS_FILTERED_CONTEXTS
-        cmd: cp "{{.TF_TOOLS_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
-      - cmd: cp "{{.TF_TOOLS_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.TF_TOOLS_SHARED_CONTEXT}}/{{.STACK}}.tfvars"
+          var: TFT_FILTERED_TFT_CONTEXTS
+        cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_STACK}}.tfvars"
+      - cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_STACK}}.tfvars"
     requires:
-      vars: [STACK]
+      vars: [TFT_STACK]
 
   plan:
     desc: Create TF plan for stack
     cmds:
-      - mkdir -p "{{.TF_TOOLS_TMP_DIR}}"
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} plan -out={{.TF_CLI_PLAN_PATH}}.tfplan {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} show -json {{.TF_CLI_PLAN_PATH}}.tfplan > {{.TF_CLI_PLAN_PATH}}.json"
+      - mkdir -p "{{.TFT_TMP_DIR}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} plan -out={{.TFT_CLI_PLAN_PATH}}.tfplan {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} show -json {{.TFT_CLI_PLAN_PATH}}.tfplan > {{.TFT_CLI_PLAN_PATH}}.json"
     requires:
-      vars: [CONTEXT, CURRENT_PRODUCT_NAME, STACK, CURRENT_VARIANT]
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_STACK, CURRENT_TFT_VARIANT]
     vars:
-      TF_TOOLS_CONTEXT_DOCUMENT:
-        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
-      TF_TOOLS_CONTEXT_CONFIG:
-        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_PLAN_PATH: "{{.TF_TOOLS_TMP_DIR}}/{{.CURRENT_PRODUCT_NAME}}-{{.STACK}}-{{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_VARIANT}}"
-      TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
+      TFT_CONTEXT_DOCUMENT:
+        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
+      TFT_CONTEXT_CONFIG:
+        ref: "fromJson .TFT_CONTEXT_DOCUMENT"
+      TFT_CLI_PLAN_PATH: "{{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_STACK}}-{{.TFT_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_TFT_VARIANT}}"
+      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='stack_name={{.TFT_STACK}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_TFT_VARIANT}}'"
 
   rm:
     desc: Remove code for TF stack
     cmds:
-      - rm -fr "{{.TF_TOOLS_STACKS_DIR}}/{{.STACK}}"
+      - rm -fr "{{.TFT_STACKS_DIR}}/{{.TFT_STACK}}"
       - for:
-          var: TF_TOOLS_FILTERED_CONTEXTS
-        cmd: rm -f "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.ITEM}}/{{.STACK}}.tfvars"
+          var: TFT_FILTERED_TFT_CONTEXTS
+        cmd: rm -f "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_STACK}}.tfvars"
     requires:
-      vars: [STACK]
+      vars: [TFT_STACK]
 
   stacks:
     desc: List TF stacks
@@ -241,28 +241,28 @@ tasks:
     silent: true
     cmds:
       - for:
-          var: TF_TOOLS_FILTERED_STACKS
+          var: TFT_FILTERED_STACKS
         cmd: echo "{{.ITEM}}"
 
   test:
     desc: Run TF test for stack
     cmds:
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} test {{.TF_CLI_VARS_OPT}} {{.TF_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} test {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [CONTEXT, CURRENT_PRODUCT_NAME, STACK, CURRENT_VARIANT]
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_STACK, CURRENT_TFT_VARIANT]
     vars:
-      TF_TOOLS_CONTEXT_DOCUMENT:
-        sh: cat {{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/context.json
-      TF_TOOLS_CONTEXT_CONFIG:
-        ref: "fromJson .TF_TOOLS_CONTEXT_DOCUMENT"
-      TF_CLI_VARS_OPT: "-var='product_name={{.CURRENT_PRODUCT_NAME}}' -var='stack_name={{.STACK}}' -var='environment_name={{.TF_TOOLS_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_VARIANT}}'"
+      TFT_CONTEXT_DOCUMENT:
+        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
+      TFT_CONTEXT_CONFIG:
+        ref: "fromJson .TFT_CONTEXT_DOCUMENT"
+      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='stack_name={{.TFT_STACK}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_TFT_VARIANT}}'"
 
   validate:
     desc: Validate TF stack
     cmds:
-      - "{{.CURRENT_TF_CLI_EXE}} {{.TF_CLI_CHDIR_OPT}} validate"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} validate"
     requires:
-      vars: [STACK]
+      vars: [TFT_STACK]
 
   ## Context tasks ##
 
@@ -273,23 +273,23 @@ tasks:
     silent: true
     cmds:
       - for:
-          var: TF_TOOLS_FILTERED_CONTEXTS
+          var: TFT_FILTERED_TFT_CONTEXTS
         cmd: echo "{{.ITEM}}"
 
   context:new:
     desc: Create a new TF context
     cmds:
-      - mkdir -p "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}"
+      - mkdir -p "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}"
       - for:
-          var: TF_TOOLS_FILTERED_STACKS
-        cmd: cp "{{.TF_TOOLS_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}/{{.ITEM}}.tfvars"
-      - cp "{{.TF_TOOLS_CONTEXTS_DIR}}/template/context.json" "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}"
+          var: TFT_FILTERED_STACKS
+        cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/{{.ITEM}}.tfvars"
+      - cp "{{.TFT_CONTEXTS_DIR}}/template/context.json" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}"
     requires:
-      vars: [CONTEXT]
+      vars: [TFT_CONTEXT]
 
   context:rm:
     desc: Remove a TF context
     cmds:
-      - rm -fr "{{.TF_TOOLS_CONTEXTS_DIR}}/{{.CONTEXT}}"
+      - rm -fr "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}"
     requires:
-      vars: [CONTEXT]
+      vars: [TFT_CONTEXT]

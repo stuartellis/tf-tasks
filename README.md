@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 
 This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) project. It uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects.
 
-The tasks in the generated projects provide an opinionated configuration for Terraform and OpenTofu. This configuration enables it to use built-in features of these tools to support:
+The tasks in the generated projects provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
 - Multiple TF components in the same code repository
 - Multiple instances of the same TF component with different configurations
@@ -64,7 +64,7 @@ To use the tasks in a generated project you need:
 - [Task](https://taskfile.dev)
 - [Terraform](https://www.terraform.io/) 1.11 and above or [OpenTofu](https://opentofu.org/) 1.9 and above
 
-You only need Python and Copier to create projects from this template. The tasks in the template do not use Python or Copier. This means that they can be run in a restricted environment, such as a continuous integration job.
+The TF tasks in the template do not use Python or Copier. This means that they can be run in a restricted environment, such as a continuous integration job.
 
 I recommend that you use a tool version manager to install copies of Terraform and OpenTofu. Consider using either [tenv](https://tofuutils.github.io/tenv/), which is specifically designed for TF tools, or the general-purpose [mise](https://mise.jdx.dev/) framework. The generated projects include a `.terraform-version` file so that your tool version manager can install the Terraform version that you specify.
 
@@ -77,49 +77,49 @@ task
 Tasks for TF stacks use the namespace `tf`. For example, `tf:new` creates the directories and files for a new stack:
 
 ```shell
-STACK=example_app task tf:new
+TFT_STACK=example_app task tf:new
 ```
 
 You need to set these environment variables to work on a stack:
 
-- `CONTEXT` - The TF configuration to use
-- `STACK` - Name of stack
+- `TFT_CONTEXT` - The TF configuration to use from `tf/contexts/`
+- `TFT_STACK` - The name of the stack in `tf/definitions/`
 
 Set these variables to override the defaults:
 
-- `PRODUCT_NAME` - The name of the project
-- `TF_CLI_EXE` - The Terraform or OpenTofu executable to use
-- `VARIANT` - The name of the active TF workspace
-- `TF_REMOTE_BACKEND` - Enables a remote TF backend
+- `TFT_PRODUCT_NAME` - The name of the project
+- `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
+- `TFT_VARIANT` - The name of the active TF workspace
+- `TFT_REMOTE_BACKEND` - Enables a remote TF backend
 
-By default, this tooling uses S3 as the remote backend for TF. We set `TF_REMOTE_BACKEND` to `false` to a local TF state file:
+By default, this tooling uses S3 as the remote backend for TF. We set `TFT_REMOTE_BACKEND` to `false` to a local TF state file:
 
 ```shell
-TF_REMOTE_BACKEND=false
+TFT_REMOTE_BACKEND=false
 ```
 
 > This tooling currently only supports S3 as a remote TF backend.
 
-Specify `CONTEXT` to create a deployment of the stack in the target CONTEXT:
+Specify `TFT_CONTEXT` to create a deployment of the stack with the configuration from the specified context:
 
 ```shell
-CONTEXT=dev STACK=example_app task tf:plan
-CONTEXT=dev STACK=example_app task tf:apply
+TFT_CONTEXT=dev TFT_STACK=example_app task tf:plan
+TFT_CONTEXT=dev TFT_STACK=example_app task tf:apply
 ```
 
-By default, this tooling uses Terraform. To use OpenTofu, set `TF_CLI_EXE` as an environment variable, with the value `tofu`:
+By default, this tooling uses Terraform. To use OpenTofu, set `TFT_CLI_EXE` as an environment variable, with the value `tofu`:
 
 ```shell
-TF_CLI_EXE=tofu
+TFT_CLI_EXE=tofu
 ```
 
 ### Variants
 
-Specify `VARIANT` to create an alternate deployment of the same stack with the same context:
+Specify `TFT_VARIANT` to create an alternate deployment of the same stack with the same context:
 
 ```shell
-CONTEXT=dev STACK=example_app VARIANT=feature1 task tf:plan
-CONTEXT=dev STACK=example_app VARIANT=feature1 task tf:apply
+TFT_CONTEXT=dev TFT_STACK=example_app TFT_VARIANT=feature1 task tf:plan
+TFT_CONTEXT=dev TFT_STACK=example_app TFT_VARIANT=feature1 task tf:apply
 ```
 
 The variant feature uses TF workspaces. It sets the value of the tfvar `variant` to the name of the variant. Use the `environment`, `stack` and `variant` tfvars to define resource names that are unique and do not conflict. The stack template generates random variant names that have the prefix `t-` to ensure that test copies of stacks do not conflict with other copies of the stack.
@@ -128,19 +128,19 @@ The variant feature uses TF workspaces. It sets the value of the tfvar `variant`
 
 | Name         | Description                                                                                       |
 | ------------ | ------------------------------------------------------------------------------------------------- |
-| tf:apply     | _terraform apply_ for a stack                                                                     |
+| tf:apply     | _terraform apply_ for a stack*                                                                     |
 | tf:check-fmt | Checks whether _terraform fmt_ would change the code for a stack                                  |
 | tf:clean     | Remove the generated files for a stack                                                            |
 | tf:console   | _terraform console_ for a stack                                                                   |
-| tf:destroy   | _terraform apply -destroy_ for a stack                                                            |
+| tf:destroy   | _terraform apply -destroy_ for a stack*                                                            |
 | tf:fmt       | _terraform fmt_ for a stack                                                                       |
-| tf:forget    | _terraform workspace delete_ for a variant                                                        |
+| tf:forget    | _terraform workspace delete_ for a variant*                                                        |
 | tf:init      | _terraform init_ for a stack                                                                      |
 | tf:new       | Add the source code for a new stack. Copies content from the _tf/definitions/template/_ directory |
 | tf:plan      | _terraform plan_ for a stack                                                                      |
 | tf:rm        | Delete the source code for a stack                                                                |
-| tf:test      | _terraform test_ for a stack                                                                      |
-| tf:validate  | _terraform validate_ for a stack                                                                  |
+| tf:test      | _terraform test_ for a stack* |
+| tf:validate  | _terraform validate_ for a stack* |
 
 ### Available `tf:context` Tasks
 

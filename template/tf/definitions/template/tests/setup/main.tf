@@ -21,6 +21,6 @@ resource "random_string" "variant_suffix" {
 }
 
 output "random_variant_name" {
-  value       = "t-${random_string.variant_suffix.result}"
+  value       = "tt${random_string.variant_suffix.result}"
   description = "A random variant name."
 }

@@ -7,4 +7,6 @@
 # SPDX-License-Identifier: MIT
 #
 
-locals {}
+locals {
+  standard_prefix = "${var.environment_name}-${var.variant}-${var.stack_name}"
+}

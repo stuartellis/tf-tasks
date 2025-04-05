@@ -6,3 +6,5 @@
 #
 # SPDX-License-Identifier: MIT
 #
+
+locals {}

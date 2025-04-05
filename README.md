@@ -124,9 +124,13 @@ TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tf:plan
 TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tf:apply
 ```
 
-The tooling automatically sets the value of the tfvar `variant` to the name of the variant. Use the `environment`, `stack` and `variant` tfvars to define resource names that are unique for each variant and do not conflict.
+The tooling automatically sets the value of the tfvar `variant` to the name of the variant.
 
-The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of stacks do not conflict with other copies, the stack template includes code to set the `variant` as a random string with the prefix `t-` for each test run.
+Only set `TFT_VARIANT` when you want to create an alternate version of a stack. If you do not specify a variant name, TF uses the default workspace for state, and the value of the tfvar `variant` is `default`.
+
+The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of stacks do not conflict with other copies, the test in the stack template includes code to set the value of `variant` to a random string with the prefix `t-`.
+
+Use the `environment`, `stack` and `variant` tfvars in your TF code to define resource names that are unique for each variant and do not conflict.
 
 ### Available `tf` Tasks
 

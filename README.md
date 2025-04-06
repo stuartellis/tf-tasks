@@ -100,7 +100,7 @@ To see a list of the available tasks in a project, enter _task_ in a terminal wi
 task
 ```
 
-Tasks for TF stacks use the namespace `tf`. For example, `tft:new` creates the directories and files for a new stack:
+Tasks for TF stacks use the namespace `tft`. For example, `tft:new` creates the directories and files for a new stack:
 
 ```shell
 TFT_STACK=example-app task tft:new
@@ -141,7 +141,7 @@ TFT_CLI_EXE=tofu
 
 ### Variants
 
-Use the variants feature to create copies of stacks for development and testing. This feature creates an alternate deployment of a stack with the same context. TF uses [workspaces](https://opentofu.org/docs/language/state/workspaces) to track the state of variants.
+Use the variants feature to create copies of stacks for development and testing. This feature creates a separate instance of a stack, using the configuration from the specified context. TF uses [workspaces](https://opentofu.org/docs/language/state/workspaces) to track the state of variants.
 
 Specify `TFT_VARIANT` to create a variant:
 

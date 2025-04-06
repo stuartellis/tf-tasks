@@ -24,22 +24,43 @@ First use [Copier](https://copier.readthedocs.io/en/stable/) to either generate 
 
 Once you have the tooling in a project, you can use it to develop and manage infrastructure with Terraform or OpenTofu. It enables you to work with multiple sets of TF infrastructure code in the same project.
 
-You can define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _stacks_. Each TF stack is a subdirectory in the directory `tf/definitions/`.
+This tooling uses specific files and directories:
 
-This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a directory that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
+```shell
+|- tasks/
+|   |- tft/
+|       |- Taskfile.yaml
+|
+|- tf/
+|    |- .gitignore
+|    |- contexts/
+|        |- all/
+|        |- template/
+|    |- definitions/
+|        |- template/
+|    |- modules/
+|
+|- tmp/
+|    |- tf/
+|
+|- .gitignore
+|- Taskfile.yaml
+```
+
+- The template adds a `tf/` directory and the file `tasks/tf/Taskfile.yaml` to the project
+- The template adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project if these do not already exist.
+- Tasks generate a `tmp/tf/` directory for artifacts.
+- Tasks only change the contents of the `tf/` and `tmp/tf/` directories.
+
+You define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _stacks_. Each TF stack is a subdirectory in the directory `tf/definitions/`.
+
+This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a subdirectory in the directory `tf/contexts/` that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
 
 > The directory `tf/contexts/all/` also contains one `.tfvars` file per stack. The `.tfvars` file for a stack in the `all` directory is always used along with `.tfvars` for the current context. This enables you to share common tfvars across all of the contexts for a stack.
 
 The project structure also includes a `tf/modules/` directory to hold TF modules that are shared between stacks in the same project.
 
 By design, this tooling does not specify or enforce any dependencies between infrastructure components. If you need to execute changes in a particular order, specify that order in whichever system you use to carry out deployments.
-
-This tooling uses specific files and directories to avoid conflicts with other tools:
-
-- The template adds a `tf/` directory and the file `tasks/tf/Taskfile.yaml` to the project
-- The template adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project if these do not already exist.
-- Tasks generate a `tmp/tf/` directory for artifacts.
-- Tasks only change the contents of the `tf/` and `tmp/tf/` directories.
 
 ## Install
 

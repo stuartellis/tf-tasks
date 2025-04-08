@@ -204,7 +204,7 @@ tasks:
       - for:
           var: TFT_FILTERED_TFT_CONTEXTS
         cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_STACK}}.tfvars"
-      - cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_STACK}}.tfvars"
+      - cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/all.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_STACK}}.tfvars"
     requires:
       vars: [TFT_STACK]
 

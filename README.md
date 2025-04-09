@@ -55,11 +55,18 @@ This tooling uses specific files and directories:
 |- Taskfile.yaml
 ```
 
-- The template adds a `tf/` directory for TF files.
-- The template adds the file `tasks/tft/Taskfile.yaml` to the project. This file contains the task definitions.
-- The template also adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project if these do not already exist.
-- Tasks generate a `tmp/tf/` directory for artifacts.
-- Tasks only change the contents of the `tf/` and `tmp/tf/` directories.
+The Copier template:
+
+- Adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project, if these do not already exist.
+- Adds the file `tasks/tft/Taskfile.yaml` to the project. This file contains the task definitions.
+- Adds a `tf/` directory for TF files.
+- Does not change the contents of the `tf/` directory once it exists.
+
+The tasks:
+
+- Generate a `tmp/tf/` directory for artifacts.
+- Only change the contents of the `tf/` and `tmp/tf/` directories.
+- Copy the contents of the `template/` directories to new stacks and contexts. Change the contents of these directories as you need.
 
 ### Stacks
 
@@ -71,7 +78,7 @@ You define each set of infrastructure code as a separate component. Each of the 
 
 This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a subdirectory in the directory `tf/contexts/` that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
 
-> The directory `tf/contexts/all/` also contains one `.tfvars` file per stack. The `.tfvars` file for a stack in the `all` directory is always used along with `.tfvars` for the current context. This enables you to share common tfvars across all of the contexts for a stack.
+> The directory `tf/contexts/all/` also contains one `.tfvars` file per stack. The `.tfvars` file for a stack in the `all` directory is always used, along with `.tfvars` for the current context. This enables you to share common tfvars across all of the contexts for a stack.
 
 ### Shared Modules
 
@@ -98,7 +105,7 @@ cd your-project-name
 uvx copier update -A -a .copier-answers-tf-tools.yaml .
 ```
 
-> Updates only currently only change the Taskfile `tasks/tf/Taskfile.yaml`. By design, the Copier configuration for this template does not change the contents of the `tf/` directory once it has been created.
+> By design, the Copier configuration for this template does not change the contents of the `tf/` directory once it has been created.
 
 ## Usage
 

@@ -29,9 +29,6 @@ _envops:
 _skip_if_exists:
   - /.gitignore
   - /Taskfile.yaml
-  - tf/contexts/
-  - tf/definitions/
-  - tf/modules/
 
 project_name:
   type: str

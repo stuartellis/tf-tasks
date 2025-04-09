@@ -29,7 +29,7 @@ _envops:
 _skip_if_exists:
   - /.gitignore
   - /Taskfile.yaml
-  - tf/
+  - tf/**
 
 project_name:
   type: str

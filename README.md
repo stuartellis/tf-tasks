@@ -56,12 +56,14 @@ This tooling uses specific files and directories:
 |    |- tf/
 |
 |- .gitignore
+|- .terraform-version
 |- Taskfile.yaml
 ```
 
 The Copier template:
 
 - Adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project, if these do not already exist.
+- Provides a `.terraform-version` file.
 - Provides the file `tasks/tft/Taskfile.yaml` to the project. This file contains the task definitions.
 - Provides a `tf/` directory for TF files.
 

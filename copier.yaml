@@ -32,6 +32,7 @@ _skip_if_exists:
   - tf/contexts/all/**
   - tf/contexts/template/**
   - tf/definitions/template/**
+  - tf/definitions/template/tests/**
 
 project_name:
   type: str

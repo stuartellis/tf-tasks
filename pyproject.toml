@@ -6,7 +6,7 @@
 
 [project]
 name = "copier-tf-tools"
-version = "0.24.1"
+version = "0.25.0"
 description = "Copier template for Terraform and OpenTofu"
 readme = "README.md"
 requires-python = ">=3.12"

@@ -40,10 +40,14 @@ This tooling uses specific files and directories:
 |    |   |- all/
 |    |   |
 |    |   |- template/
+|    |   |
+|    |   |- <generated contexts>
 |    |
 |    |- definitions/
 |    |    |
 |    |    |- template/
+|    |    |
+|    |    |- <generated stack definitions>
 |    |
 |    |- modules/
 |
@@ -52,15 +56,16 @@ This tooling uses specific files and directories:
 |    |- tf/
 |
 |- .gitignore
+|- .terraform-version
 |- Taskfile.yaml
 ```
 
 The Copier template:
 
 - Adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project, if these do not already exist.
-- Adds the file `tasks/tft/Taskfile.yaml` to the project. This file contains the task definitions.
-- Adds a `tf/` directory for TF files.
-- Does not change the contents of the `tf/` directory once it exists.
+- Provides a `.terraform-version` file.
+- Provides the file `tasks/tft/Taskfile.yaml` to the project. This file contains the task definitions.
+- Provides a `tf/` directory for TF files.
 
 The tasks:
 
@@ -84,7 +89,13 @@ This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to 
 
 The project structure also includes a `tf/modules/` directory to hold TF modules that are shared between stacks in the same project.
 
-### Dependencies
+### Variants
+
+The variants feature creates extra copies of stacks for development and testing. A variant is a separate instance of a stack, using the configuration from the specified context. Each variant is a TF [workspace](https://opentofu.org/docs/language/state/workspaces).
+
+> If you do not set a variant, TF uses the default workspace for the stack.
+
+### Dependencies Between Stacks
 
 By design, this tooling does not specify or enforce any dependencies between infrastructure components. If you need to execute changes in a particular order, specify that order in whichever system you use to carry out deployments.
 
@@ -167,7 +178,7 @@ TFT_CLI_EXE=tofu
 
 ### Variants
 
-Use the variants feature to create copies of stacks for development and testing. This feature creates a separate instance of a stack, using the configuration from the specified context. TF uses [workspaces](https://opentofu.org/docs/language/state/workspaces) to track the state of variants.
+Use the variants feature to deploy extra copies of stacks for development and testing. Each variant is an instance of a stack, using the configuration from the specified context.
 
 Specify `TFT_VARIANT` to create a variant:
 

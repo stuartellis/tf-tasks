@@ -29,10 +29,10 @@ _envops:
 _skip_if_exists:
   - /.gitignore
   - /Taskfile.yaml
-  - tf/contexts/all/**
-  - tf/contexts/template/**
-  - tf/definitions/template/**
-  - tf/definitions/template/tests/**
+  - tf/contexts/all/
+  - tf/contexts/template/
+  - tf/definitions/template/
+  - tf/definitions/template/tests/
 
 project_name:
   type: str

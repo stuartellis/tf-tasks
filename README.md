@@ -91,7 +91,7 @@ The project structure also includes a `tf/modules/` directory to hold TF modules
 
 ### Variants
 
-The variants feature creates extra copies of stacks for development and testing. A variant is a separate instance of a stack, using the configuration from the specified context. Each variant is a TF [workspace](https://opentofu.org/docs/language/state/workspaces).
+The variants feature creates extra copies of stacks for development and testing. A variant is a separate instance of a stack. Each variant of a stack uses the same configuration as other instances with the specified context, but has a unique identifier. Every variant is a TF [workspace](https://opentofu.org/docs/language/state/workspaces), so has separate state.
 
 > If you do not set a variant, TF uses the default workspace for the stack.
 
@@ -178,7 +178,7 @@ TFT_CLI_EXE=tofu
 
 ### Variants
 
-Use the variants feature to deploy extra copies of stacks for development and testing. Each variant is an instance of a stack, using the configuration from the specified context.
+Use the variants feature to deploy extra copies of stacks for development and testing. Each variant of a stack uses the same configuration as other instances with the specified context.
 
 Specify `TFT_VARIANT` to create a variant:
 
@@ -187,7 +187,7 @@ TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tft:plan
 TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tft:apply
 ```
 
-The tooling automatically sets the value of the tfvar `variant` to the name of the variant.
+The tooling automatically sets the value of the tfvar `variant` to match `TFT_VARIANT`. This ensures that every variant has a unique identifier that can be used in TF code.
 
 Only set `TFT_VARIANT` when you want to create an alternate version of a stack. If you do not specify a variant name, TF uses the default workspace for state, and the value of the tfvar `variant` is `default`.
 

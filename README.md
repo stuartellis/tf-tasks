@@ -35,13 +35,13 @@ TFT_CONTEXT=dev TFT_STACK=my-app task tft:plan
 TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
 ```
 
-The main tooling is a single [Task](https://taskfile.dev) file that generates and runs commands. It specifically does not include code in a programming language like Python or Go. It is also not tied to particular versions of Terraform or OpenTofu. This means that it runs on any UNIX-based system, including CI/CD environments, has few dependencies and does not require regular maintenance. Use Copier to synchronize projects with newer [versions](https://github.com/stuartellis/tf-tasks/releases) as needed.
+The main tooling is a single [Task](https://taskfile.dev) file that generates and runs commands. It specifically does not include code in a programming language like Python or Go. It is also not tied to particular versions of Terraform or OpenTofu. These features mean that it runs on any UNIX-based system, including CI/CD environments, has few dependencies and does not require regular maintenance. Use Copier to synchronize projects with newer [versions](https://github.com/stuartellis/tf-tasks/releases) as needed.
 
 > This project uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft`.
 
 ## How It Works
 
-First use [Copier](https://copier.readthedocs.io/en/stable/) to either generate a new project, or to add this tooling to an existing project.
+First, use [Copier](https://copier.readthedocs.io/en/stable/) to either generate a new project, or to add this tooling to an existing project.
 
 The tooling uses specific files and directories:
 
@@ -98,7 +98,7 @@ You define each set of infrastructure code as a separate component. Each of the 
 
 The tooling creates each new stack as a copy of the files in `tf/stacks/template/`. This means that a new stack works immediately.
 
-> This tooling does not explicitly conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). I do not currently use HCP Terraform to test with the stacks feature. It is unclear when this feature will be finalised, if it will able to function without a HCP Terraform account, or if it will be implemented by OpenTofu.
+> This tooling does not explicitly conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). However, I do not currently use HCP Terraform to test with the stacks feature that it provides. It is unclear when this feature will be finalised, if it will be able to be used without a HCP Terraform account, or if an equivalent will be implemented by OpenTofu.
 
 ### Contexts
 

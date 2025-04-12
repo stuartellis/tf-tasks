@@ -16,7 +16,24 @@ The tasks in the generated projects provide an opinionated configuration for Ter
 - Multiple instances of the same TF component with different configurations
 - Temporary instances of a TF component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 
-> This project uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior.
+For example, to start a project:
+
+```shell
+uvx copier copy git+https://github.com/stuartellis/copier-tf-tools my-project
+cd my-project
+TFT_CONTEXT=dev task tft:context:new
+TFT_STACK=my-app task tft:new
+```
+
+To deploy a stack:
+
+```shell
+TFT_CONTEXT=dev TFT_STACK=my-app task tft:init
+TFT_CONTEXT=dev TFT_STACK=my-app task tft:plan
+TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
+```
+
+> This project uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft`.
 
 ## How It Works
 
@@ -77,23 +94,37 @@ The tasks:
 
 You define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _stacks_. Each TF stack is a subdirectory in the directory `tf/definitions/`.
 
-> This tooling is expected to be compatible with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). I do not use or test with the feature, since it is unclear when it will be finalised, or if it will be implemented by OpenTofu.
+The tooling creates each new stack as a copy of the files in `tf/stacks/template/`. This means that a new stack works immediately. You can change the files in `template` to customise it for the project.
+
+> This tooling is expected to be compatible with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). I do not use this feature or test with it, since it is unclear when it will be finalised, or if it will be implemented by OpenTofu.
 
 ### Contexts
 
 This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a subdirectory in the directory `tf/contexts/` that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
 
-> The directory `tf/contexts/all/` also contains one `.tfvars` file per stack. The `.tfvars` file for a stack in the `all` directory is always used, along with `.tfvars` for the current context. This enables you to share common tfvars across all of the contexts for a stack.
+Each `context.json` file currently only specifies one item of metadata: `environment`. This is a string that is automatically provided as a tfvar. You may use this tfvar in whatever way is appropriate for the project. For example, you can define multiple contexts that use the same environment.
 
-### Shared Modules
+The directory `tf/contexts/all/` also contains one `.tfvars` file per stack. The `.tfvars` file for a stack in the `all` directory is always used, along with `.tfvars` for the current context. This enables you to share common tfvars across all of the contexts for a stack.
 
-The project structure also includes a `tf/modules/` directory to hold TF modules that are shared between stacks in the same project.
+The tooling creates each new context as a copy of files in `tf/contexts/template/`. Edit `standard.tfvars` to customise the tfvars files are are created for new stacks.
 
 ### Variants
 
 The variants feature creates extra copies of stacks for development and testing. A variant is a separate instance of a stack. Each variant of a stack uses the same configuration as other instances with the specified context, but has a unique identifier. Every variant is a TF [workspace](https://opentofu.org/docs/language/state/workspaces), so has separate state.
 
 > If you do not set a variant, TF uses the default workspace for the stack.
+
+### Resource Names
+
+Use the `environment`, `stack_name` and `variant` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
+
+> The test in the stack template includes code to set the value of `variant` to a random string with the prefix `tt`.
+
+The code in the stack template includes the local `standard_prefix` to help you set unique names for resources.
+
+### Shared Modules
+
+The project structure also includes a `tf/modules/` directory to hold TF modules that are shared between stacks in the same project.
 
 ### Dependencies Between Stacks
 
@@ -106,13 +137,13 @@ You need [Copier](https://copier.readthedocs.io/en/stable/) to add this template
 You can either create a new project with this template or add the template to an existing project. Use the same _copy_ sub-command of Copier for both cases. Run Copier with the _uvx_ or _pipx run_ commands, which download and cache software packages as needed. For example:
 
 ```shell
-uvx copier copy git+https://github.com/stuartellis/copier-tf-tools your-project-name
+uvx copier copy git+https://github.com/stuartellis/copier-tf-tools my-project
 ```
 
 To update a project again with this template, run these commands:
 
 ```shell
-cd your-project-name
+cd my-project
 uvx copier update -A -a .copier-answers-tf-tools.yaml .
 ```
 
@@ -137,54 +168,41 @@ To see a list of the available tasks in a project, enter _task_ in a terminal wi
 task
 ```
 
-Tasks for TF stacks use the namespace `tft`. For example, `tft:new` creates the directories and files for a new stack:
+> Tasks for TF stacks use the namespace `tft`. This means that they do not conflict with any other tasks in the project.
+
+Before you manage resources with TF, first create at least one context:
 
 ```shell
-TFT_STACK=example-app task tft:new
+TFT_CONTEXT=dev task tft:context:new
 ```
 
-You need to set these environment variables to work on a stack:
+This creates a new context. Edit the `context.json` file in the directory `tf/contexts/<CONTEXT>/` to specify the settings for the remote state storage that you want to use and set the `environment` name.
 
-- `TFT_CONTEXT` - The TF configuration to use from `tf/contexts/`
-- `TFT_STACK` - The name of the stack in `tf/definitions/`
+> By default, this tooling uses [remote state](https://opentofu.org/docs/language/state/remote/) for TF. The current version always uses S3 remote for state.
 
-Set these variables to override the defaults:
-
-- `TFT_PRODUCT_NAME` - The name of the project
-- `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
-- `TFT_VARIANT` - See the section on [variants](#variants)
-- `TFT_REMOTE_BACKEND` - Enables a remote TF backend
-
-By default, this tooling uses [remote state](https://opentofu.org/docs/language/state/remote/) with TF. Set `TFT_REMOTE_BACKEND` to `false` to use a local TF state file:
+Next, create a stack:
 
 ```shell
-TFT_REMOTE_BACKEND=false
+TFT_STACK=my-app task tft:new
 ```
 
-> This tooling currently only supports S3 for remote state.
-
-Specify `TFT_CONTEXT` to create a deployment of the stack with the configuration from the specified context:
+Use `TFT_CONTEXT` and `TFT_STACK` to create a deployment of the stack with the configuration from the specified context:
 
 ```shell
-TFT_CONTEXT=dev TFT_STACK=example-app task tft:plan
-TFT_CONTEXT=dev TFT_STACK=example-app task tft:apply
+TFT_CONTEXT=dev TFT_STACK=my-app task tft:init
+TFT_CONTEXT=dev TFT_STACK=my-app task tft:plan
+TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
 ```
 
-By default, this tooling uses Terraform. To use OpenTofu, set `TFT_CLI_EXE` as an environment variable, with the value `tofu`:
-
-```shell
-TFT_CLI_EXE=tofu
-```
-
-### Variants
+### Optional: Using Variants
 
 Use the variants feature to deploy extra copies of stacks for development and testing. Each variant of a stack uses the same configuration as other instances with the specified context.
 
 Specify `TFT_VARIANT` to create a variant:
 
 ```shell
-TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tft:plan
-TFT_CONTEXT=dev TFT_STACK=example-app TFT_VARIANT=feature1 task tft:apply
+TFT_CONTEXT=dev TFT_STACK=my-app TFT_VARIANT=feature1 task tft:plan
+TFT_CONTEXT=dev TFT_STACK=my-app TFT_VARIANT=feature1 task tft:apply
 ```
 
 The tooling automatically sets the value of the tfvar `variant` to match `TFT_VARIANT`. This ensures that every variant has a unique identifier that can be used in TF code.
@@ -193,13 +211,21 @@ Only set `TFT_VARIANT` when you want to create an alternate version of a stack. 
 
 The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of stacks do not conflict with other copies, the test in the stack template includes code to set the value of `variant` to a random string with the prefix `tt`.
 
-### Resource Names
+### Optional: Using Local TF State
 
-Use the `environment`, `stack_name` and `variant` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
+This tooling currently uses remote state by default. Set `TFT_REMOTE_BACKEND` to `false` to use a local TF state file:
 
-> The test in the stack template includes code to set the value of `variant` to a random string with the prefix `tt`.
+```shell
+TFT_REMOTE_BACKEND=false
+```
 
-The code in the stack template includes the local `standard_prefix` to help you set unique names for resources.
+### Optional: Using OpenTofu
+
+By default, this tooling uses Terraform. To use OpenTofu, set `TFT_CLI_EXE` as an environment variable, with the value `tofu`:
+
+```shell
+TFT_CLI_EXE=tofu
+```
 
 ### Available `tft` Tasks
 
@@ -228,6 +254,15 @@ The code in the stack template includes the local `standard_prefix` to help you 
 | tft:context:list | List the contexts                                                            |
 | tft:context:new  | Add a new context. Copies content from the _tf/contexts/template/_ directory |
 | tft:context:rm   | Delete the directory for a context                                           |
+
+### Settings for Features
+
+Set these variables to override the defaults:
+
+- `TFT_PRODUCT_NAME` - The name of the project
+- `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
+- `TFT_VARIANT` - See the section on [variants](#variants)
+- `TFT_REMOTE_BACKEND` - Enables a remote TF backend
 
 ## Contributing
 

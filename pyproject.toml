@@ -5,9 +5,9 @@
 # Configuration for Python project
 
 [project]
-name = "copier-tf-tools"
+name = "tf-tasks"
 version = "0.28.0"
-description = "Copier template for Terraform and OpenTofu"
+description = "Terraform project template & tooling for monorepos"
 readme = "README.md"
 requires-python = ">=3.12"
 

@@ -10,16 +10,18 @@ SPDX-License-Identifier: MIT
 
 This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) project. It uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects.
 
-The tasks in the generated projects provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
+The tasks provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
 - Multiple TF components ([modules](https://opentofu.org/docs/language/modules/)) in the same code repository
 - Multiple instances of the same TF component with different configurations
 - Temporary instances of a TF component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 
-For example, to start a project:
+The tooling is designed to avoid conflicts with other technologies. You can use it on a new project, or to add it to an existing project.
+
+For example, to start a new project:
 
 ```shell
-uvx copier copy git+https://github.com/stuartellis/copier-tf-tools my-project
+copier copy git+https://github.com/stuartellis/copier-tf-tools my-project
 cd my-project
 TFT_CONTEXT=dev task tft:context:new
 TFT_STACK=my-app task tft:new
@@ -33,15 +35,15 @@ TFT_CONTEXT=dev TFT_STACK=my-app task tft:plan
 TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
 ```
 
+The tooling specifically does not include code in a programming language like Python or Go. This means that it requires little maintenance. It is not tied to particular versions of Terraform or OpenTofu.
+
 > This project uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft`.
 
 ## How It Works
 
-First use [Copier](https://copier.readthedocs.io/en/stable/) to either generate a new project, or to add this tooling to an existing project. The tooling is designed to avoid conflicts with other technologies.
+First use [Copier](https://copier.readthedocs.io/en/stable/) to either generate a new project, or to add this tooling to an existing project.
 
-Once you have the tooling in a project, you can use it to develop and manage infrastructure with Terraform or OpenTofu. It enables you to work with multiple sets of TF infrastructure code in the same project.
-
-This tooling uses specific files and directories:
+The tooling uses specific files and directories:
 
 ```shell
 |- tasks/
@@ -100,7 +102,7 @@ The tooling creates each new stack as a copy of the files in `tf/stacks/template
 
 ### Contexts
 
-This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. These instances may or may not be in different environments. Each context is a subdirectory in the directory `tf/contexts/` that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
+This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. Each context is a subdirectory in the directory `tf/contexts/` that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
 
 Each `context.json` file currently only specifies one item of metadata: `environment`. This is a string that is automatically provided as a tfvar. You may use this tfvar in whatever way is appropriate for the project. For example, you can define multiple contexts that use the same environment.
 
@@ -156,7 +158,7 @@ To use the tasks in a generated project you need:
 - [Git](https://git-scm.com/)
 - A UNIX shell, such as Bash or Fish
 - [Task](https://taskfile.dev)
-- [Terraform](https://www.terraform.io/) 1.11 and above or [OpenTofu](https://opentofu.org/) 1.9 and above
+- [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/)
 
 The TF tasks in the template do not use Python or Copier. This means that they can be run in a restricted environment, such as a continuous integration job.
 
@@ -178,7 +180,7 @@ TFT_CONTEXT=dev task tft:context:new
 
 This creates a new context. Edit the `context.json` file in the directory `tf/contexts/<CONTEXT>/` to specify the settings for the remote state storage that you want to use and set the `environment` name.
 
-> By default, this tooling uses [remote state](https://opentofu.org/docs/language/state/remote/) for TF. The current version always uses S3 remote for state.
+> By default, this tooling uses [remote state](https://opentofu.org/docs/language/state/remote/) for TF. The current version always uses S3 for remote state.
 
 Next, create a stack:
 
@@ -193,6 +195,8 @@ TFT_CONTEXT=dev TFT_STACK=my-app task tft:init
 TFT_CONTEXT=dev TFT_STACK=my-app task tft:plan
 TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
 ```
+
+> You will see a warning when you run `init` with a current version of Terraform. This is because Hashicorp are [deprecating the use of DynamoDB with S3 remote state](https://developer.hashicorp.com/terraform/language/backend/s3#state-locking). To support older versions of Terraform, this tooling will continue to use DynamoDB for a period of time.
 
 ### Optional: Using Variants
 
@@ -213,11 +217,13 @@ The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates a
 
 ### Optional: Using Local TF State
 
-This tooling currently uses remote state by default. Set `TFT_REMOTE_BACKEND` to `false` to use a local TF state file:
+This tooling currently uses [remote state](https://opentofu.org/docs/language/state/remote/) by default. Set `TFT_REMOTE_BACKEND` to `false` to use [local TF state](https://opentofu.org/docs/language/settings/backends/local/):
 
 ```shell
 TFT_REMOTE_BACKEND=false
 ```
+
+> I highly recommend that you only use TF local state for prototyping. Local state means that the resources can only be managed from a computer that has access to the state files.
 
 ### Optional: Using OpenTofu
 

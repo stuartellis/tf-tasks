@@ -35,7 +35,7 @@ TFT_CONTEXT=dev TFT_STACK=my-app task tft:plan
 TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
 ```
 
-The tooling specifically does not include code in a programming language like Python or Go. This means that it requires little maintenance. It is not tied to particular versions of Terraform or OpenTofu.
+The main tooling is a single [Task](https://taskfile.dev) file that generates and runs commands. It specifically does not include code in a programming language like Python or Go. This means that it runs on any UNIX-based system, including CI/CD environments, has few dependencies and requires little maintenance. It is not tied to particular versions of Terraform or OpenTofu.
 
 > This project uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft`.
 

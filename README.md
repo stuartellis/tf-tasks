@@ -276,13 +276,13 @@ Set these variables to override the defaults:
 
 ## Contributing
 
-This project was built for my personal use. I will consider suggestions and Pull Requests, but I might decline anything that makes it less useful for my needs. You are welcome to fork this project.
+This project was built for my personal use. I will consider suggestions and Pull Requests, but I may decline anything that makes it less useful for my needs. You are welcome to fork this project.
 
-Some of the configuration files for this project template are provided by my [project baseline](https://github.com/stuartellis/copier-sve-baseline) Copier template. To synchronize a copy of this project template with the baseline template, run these commands:
+Some of the configuration files for this project template are provided by my [project baseline Copier template](https://github.com/stuartellis/copier-sve-baseline). To synchronize a copy of this project template with the baseline template, run these commands:
 
 ```shell
-cd copier-sve-baseline
-copier update -a .copier-answers-baseline.yaml .
+cd tf-tasks
+copier update -A -a .copier-answers-baseline.yaml .
 ```
 
 ## License

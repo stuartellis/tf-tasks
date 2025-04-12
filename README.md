@@ -84,7 +84,7 @@ The Copier template:
 - Adds a `.gitignore` file and a `Taskfile.yaml` file to the root directory of the project, if these do not already exist.
 - Provides a `.terraform-version` file.
 - Provides the file `tasks/tft/Taskfile.yaml` to the project. This file contains the task definitions.
-- Provides a `tf/` directory for TF files.
+- Provides a `tf/` directory structure for TF files and configuration.
 
 The tasks:
 
@@ -102,13 +102,13 @@ The tooling creates each new stack as a copy of the files in `tf/stacks/template
 
 ### Contexts
 
-This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. Each context is a subdirectory in the directory `tf/contexts/` that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file specifies metadata and the settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
+This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same stack with different configurations. Each context is a subdirectory in the directory `tf/contexts/` that contains a `context.json` file and one `.tfvars` file per stack. The `context.json` file is the configuration file for the context. It specifies metadata and settings for TF [remote state](https://opentofu.org/docs/language/state/remote/).
 
-Each `context.json` file currently only specifies one item of metadata: `environment`. This is a string that is automatically provided as a tfvar. You may use this tfvar in whatever way is appropriate for the project. For example, you can define multiple contexts that use the same environment.
+Each `context.json` file specifies two items of metadata: `description` and `environment`. The `description` is deliberately not used by the tooling, so that you may use it however you wish. The `environment` is a string that is automatically provided as a tfvar. You may use the `environment` tfvar in whatever way is appropriate for the project. For example, you could define multiple contexts with the same environment.
 
-The directory `tf/contexts/all/` also contains one `.tfvars` file per stack. The `.tfvars` file for a stack in the `all` directory is always used, along with `.tfvars` for the current context. This enables you to share common tfvars across all of the contexts for a stack.
+To enable you to share common tfvars across all of the contexts for a stack, the directory `tf/contexts/all/` contains one `.tfvars` file for each stack. The `.tfvars` file for a stack in the `all` directory is always used, along with `.tfvars` for the current context.
 
-The tooling creates each new context as a copy of files in `tf/contexts/template/`. Edit `standard.tfvars` to customise the tfvars files are are created for new stacks.
+The tooling creates each new context as a copy of files in `tf/contexts/template/`. Edit `standard.tfvars` to customise the tfvars files that are created for new stacks.
 
 ### Variants
 

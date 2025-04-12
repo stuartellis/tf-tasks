@@ -12,7 +12,7 @@ This [Copier](https://copier.readthedocs.io/en/stable/) template provides files 
 
 The tasks provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
-- Multiple TF components ([modules](https://opentofu.org/docs/language/modules/)) in the same code repository as self-contained [stacks](#stacks)
+- Multiple TF components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as self-contained [stacks](#stacks)
 - Multiple instances of the same TF component with different configurations
 - Temporary instances of a TF component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 
@@ -35,7 +35,7 @@ TFT_CONTEXT=dev TFT_STACK=my-app task tft:plan
 TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
 ```
 
-The main tooling is a single [Task](https://taskfile.dev) file that generates and runs commands. It specifically does not include code in a programming language like Python or Go. It is also not tied to particular versions of Terraform or OpenTofu. This means that it runs on any UNIX-based system, including CI/CD environments, has few dependencies and does not require regular maintenance. Use Copier to synchronize projects with newer versions of the template when needed.
+The main tooling is a single [Task](https://taskfile.dev) file that generates and runs commands. It specifically does not include code in a programming language like Python or Go. It is also not tied to particular versions of Terraform or OpenTofu. This means that it runs on any UNIX-based system, including CI/CD environments, has few dependencies and does not require regular maintenance. Use Copier to synchronize projects with newer [versions](https://github.com/stuartellis/tf-tasks/releases) as needed.
 
 > This project uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft`.
 
@@ -90,7 +90,7 @@ The tasks:
 
 - Generate a `tmp/tf/` directory for artifacts.
 - Only change the contents of the `tf/` and `tmp/tf/` directories.
-- Copy the contents of the `template/` directories to new stacks and contexts. Change the contents of these directories as you need.
+- Copy the contents of the `template/` directories to new stacks and contexts. These provide consistent structures for each component.
 
 ### Stacks
 

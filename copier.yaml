@@ -14,7 +14,7 @@ _min_copier_version: "9"
 _subdirectory: template
 
 # Name of the answers file
-_answers_file: .copier-answers-tf-tools.yaml
+_answers_file: .copier-answers-tf-tasks.yaml
 
 # Use alternate template delimiters
 # This avoids conflicts with Task templating

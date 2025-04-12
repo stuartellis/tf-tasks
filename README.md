@@ -12,7 +12,7 @@ This [Copier](https://copier.readthedocs.io/en/stable/) template provides files 
 
 The tasks provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
-- Multiple TF components ([modules](https://opentofu.org/docs/language/modules/)) in the same code repository
+- Multiple TF components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as self-contained [stacks](#stacks)
 - Multiple instances of the same TF component with different configurations
 - Temporary instances of a TF component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 
@@ -27,7 +27,7 @@ TFT_CONTEXT=dev task tft:context:new
 TFT_STACK=my-app task tft:new
 ```
 
-To deploy a stack:
+Add the settings for remote state storage to the [context](#contexts). You can then start working with your stacks:
 
 ```shell
 TFT_CONTEXT=dev TFT_STACK=my-app task tft:init
@@ -35,7 +35,7 @@ TFT_CONTEXT=dev TFT_STACK=my-app task tft:plan
 TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
 ```
 
-The main tooling is a single [Task](https://taskfile.dev) file that generates and runs commands. It specifically does not include code in a programming language like Python or Go. This means that it runs on any UNIX-based system, including CI/CD environments, has few dependencies and requires little maintenance. It is not tied to particular versions of Terraform or OpenTofu.
+The main tooling is a single [Task](https://taskfile.dev) file that generates and runs commands. It specifically does not include code in a programming language like Python or Go. It is also not tied to particular versions of Terraform or OpenTofu. This means that it runs on any UNIX-based system, including CI/CD environments, has few dependencies and does not require regular maintenance. Use Copier to synchronize projects with newer [versions](https://github.com/stuartellis/tf-tasks/releases) as needed.
 
 > This project uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft`.
 
@@ -90,15 +90,15 @@ The tasks:
 
 - Generate a `tmp/tf/` directory for artifacts.
 - Only change the contents of the `tf/` and `tmp/tf/` directories.
-- Copy the contents of the `template/` directories to new stacks and contexts. Change the contents of these directories as you need.
+- Copy the contents of the `template/` directories to new stacks and contexts. These provide consistent structures for each component.
 
 ### Stacks
 
 You define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _stacks_. Each TF stack is a subdirectory in the directory `tf/definitions/`.
 
-The tooling creates each new stack as a copy of the files in `tf/stacks/template/`. This means that a new stack works immediately. You can change the files in `template` to customise it for the project.
+The tooling creates each new stack as a copy of the files in `tf/stacks/template/`. This means that a new stack works immediately.
 
-> This tooling is expected to be compatible with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). I do not use this feature or test with it, since it is unclear when it will be finalised, or if it will be implemented by OpenTofu.
+> This tooling does not explicitly conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). I do not currently use HCP Terraform to test with the stacks feature. It is unclear when this feature will be finalised, if it will able to function without a HCP Terraform account, or if it will be implemented by OpenTofu.
 
 ### Contexts
 
@@ -108,7 +108,7 @@ Each `context.json` file specifies two items of metadata: `description` and `env
 
 To enable you to share common tfvars across all of the contexts for a stack, the directory `tf/contexts/all/` contains one `.tfvars` file for each stack. The `.tfvars` file for a stack in the `all` directory is always used, along with `.tfvars` for the current context.
 
-The tooling creates each new context as a copy of files in `tf/contexts/template/`. Edit `standard.tfvars` to customise the tfvars files that are created for new stacks.
+The tooling creates each new context as a copy of files in `tf/contexts/template/`. It uses `standard.tfvars` to create the tfvars files that are created for new stacks.
 
 ### Variants
 
@@ -142,15 +142,6 @@ You can either create a new project with this template or add the template to an
 uvx copier copy git+https://github.com/stuartellis/tf-tasks my-project
 ```
 
-To update a project again with this template, run these commands:
-
-```shell
-cd my-project
-uvx copier update -A -a .copier-answers-tf-tools.yaml .
-```
-
-> By design, the Copier configuration for this template does not change the contents of the `tf/` directory once it has been created.
-
 ## Usage
 
 To use the tasks in a generated project you need:
@@ -170,7 +161,7 @@ To see a list of the available tasks in a project, enter _task_ in a terminal wi
 task
 ```
 
-> Tasks for TF stacks use the namespace `tft`. This means that they do not conflict with any other tasks in the project.
+> The tasks use the namespace `tft`. This means that they do not conflict with any other tasks in the project.
 
 Before you manage resources with TF, first create at least one context:
 
@@ -197,6 +188,19 @@ TFT_CONTEXT=dev TFT_STACK=my-app task tft:apply
 ```
 
 > You will see a warning when you run `init` with a current version of Terraform. This is because Hashicorp are [deprecating the use of DynamoDB with S3 remote state](https://developer.hashicorp.com/terraform/language/backend/s3#state-locking). To support older versions of Terraform, this tooling will continue to use DynamoDB for a period of time.
+
+### Updating TF Tasks
+
+To update projects with the latest version of this template, use the [update feature of Copier](https://copier.readthedocs.io/en/stable/updating/):
+
+```shell
+cd my-project
+uvx copier update -A -a .copier-answers-tf-task.yaml .
+```
+
+This synchronizes the files in your project that the template manages with the latest release of the template.
+
+> Copier only changes the files and directories that are managed by the template.
 
 ### Optional: Using Variants
 

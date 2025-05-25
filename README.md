@@ -189,7 +189,7 @@ The code in the stack template includes the local `standard_prefix` to help you 
 
 ### Shared Modules
 
-The project structure also includes a `tf/modules/` directory to hold TF modules that are shared between stacks in the same project. To share modules between projects, [publish them to a registry](https://opentofu.org/docs/language/modules/#published-modules).
+The project structure also includes a `tf/shared/` directory to hold TF modules that are shared between root modules in the same project. To share modules between projects, [publish them to a registry](https://opentofu.org/docs/language/modules/#published-modules).
 
 ### Dependencies Between Stacks
 

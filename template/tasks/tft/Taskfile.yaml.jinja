@@ -22,12 +22,10 @@
 #
 # Set these variables to override the defaults:
 #
-# TFT_PRODUCT_NAME - Name of project
-# TFT_CLI_EXE - The Terraform or OpenTofu executable to use
-# TFT_VARIANT - Name of TF workspace
-# TFT_REMOTE_BACKEND - Enables remote TF backend
-#
-# Set TFT_REMOTE_BACKEND to "false" to use local backend:
+# TFT_PRODUCT_NAME   - Name of project
+# TFT_CLI_EXE        - The Terraform or OpenTofu executable to use
+# TFT_VARIANT        - Name of TF workspace
+# TFT_REMOTE_BACKEND - Set TFT_REMOTE_BACKEND to "false" to force the use of local TF state:
 #
 # TFT_REMOTE_BACKEND=false
 #
@@ -175,30 +173,6 @@ tasks:
     env:
       TF_WORKSPACE: "{{.DEFAULT_TFT_VARIANT}}"
 
-  init:
-    desc: Initialise a TF unit
-    deps: [clean]
-    cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}}"
-    requires:
-      vars: [TFT_CONTEXT, TFT_UNIT]
-    vars:
-      TFT_CLI_BACKEND_DOCUMENT:
-        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
-      TFT_CLI_BACKEND_CONFIG:
-        ref: "fromJson .TFT_CLI_BACKEND_DOCUMENT"
-      TFT_CLI_BACKEND_S3_OPT: >
-        -backend-config=\"encrypt=true\"
-        -backend-config=\"workspace_key_prefix=workspaces\"
-        -backend-config=\"assume_role={role_arn=\\\"{{.TFT_CLI_BACKEND_CONFIG.backend_s3.role_arn}}\\\"}\"
-        -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backend_s3.region}}\"
-        -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
-        -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
-        -backend-config=\"key=tft/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
-      # This is currently hard-coded to use S3 as the remote TF backend
-      TFT_CLI_BACKEND_OPT:
-        sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{.TFT_CLI_BACKEND_FALSE_OPT}}{{else}}{{.TFT_CLI_BACKEND_S3_OPT}}{{end}}
-
   new:
     desc: Create a new TF unit
     cmds:
@@ -295,3 +269,38 @@ tasks:
       - rm -fr "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}"
     requires:
       vars: [TFT_CONTEXT]
+
+  ## TF initialization tasks ##
+
+  init:local:
+    desc: Initialise local state for TF unit
+    deps: [clean]
+    cmds:
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_FALSE_OPT}}"
+    requires:
+      vars: [TFT_CONTEXT, TFT_UNIT]
+
+  init:s3:
+    desc: Initialise S3 remote state for TF unit
+    aliases:
+      - init
+    deps: [clean]
+    cmds:
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}}"
+    requires:
+      vars: [TFT_CONTEXT, TFT_UNIT]
+    vars:
+      TFT_CLI_BACKEND_DOCUMENT:
+        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
+      TFT_CLI_BACKEND_CONFIG:
+        ref: "fromJson .TFT_CLI_BACKEND_DOCUMENT"
+      TFT_CLI_BACKEND_S3_OPT: >
+        -backend-config=\"encrypt=true\"
+        -backend-config=\"workspace_key_prefix=workspaces\"
+        -backend-config=\"assume_role={role_arn=\\\"{{.TFT_CLI_BACKEND_CONFIG.backend_s3.role_arn}}\\\"}\"
+        -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backend_s3.region}}\"
+        -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
+        -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
+        -backend-config=\"key=tft/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
+      TFT_CLI_BACKEND_OPT:
+        sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{.TFT_CLI_BACKEND_FALSE_OPT}}{{else}}{{.TFT_CLI_BACKEND_S3_OPT}}{{end}}

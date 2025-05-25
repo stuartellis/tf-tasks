@@ -194,7 +194,7 @@ tasks:
         -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backend_s3.region}}\"
         -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
         -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
-        -backend-config=\"key=units/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
+        -backend-config=\"key=tft/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
       # This is currently hard-coded to use S3 as the remote TF backend
       TFT_CLI_BACKEND_OPT:
         sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{.TFT_CLI_BACKEND_FALSE_OPT}}{{else}}{{.TFT_CLI_BACKEND_S3_OPT}}{{end}}

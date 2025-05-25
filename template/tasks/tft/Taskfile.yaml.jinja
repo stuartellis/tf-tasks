@@ -279,7 +279,7 @@ tasks:
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_FALSE_OPT}}"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
-  
+
   init:s3:
     desc: Initialise S3 remote state for TF unit
     aliases:

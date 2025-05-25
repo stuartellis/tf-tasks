@@ -288,7 +288,7 @@ Set these variables to override the defaults:
 - `TFT_PRODUCT_NAME` - The name of the project
 - `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
 - `TFT_VARIANT` - See the section on [variants](#variants)
-- `TFT_REMOTE_BACKEND` - Set TFT_REMOTE_BACKEND to "false" to force the use of local TF state
+- `TFT_REMOTE_BACKEND` - Set to _false_ to force the use of local TF state
 
 ### Updating TF Tasks
 

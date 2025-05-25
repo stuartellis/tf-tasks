@@ -22,9 +22,12 @@
 #
 # Set these variables to override the defaults:
 #
-# TFT_PRODUCT_NAME - Name of project
-# TFT_CLI_EXE      - The Terraform or OpenTofu executable to use
-# TFT_VARIANT      - Name of TF workspace
+# TFT_PRODUCT_NAME   - Name of project
+# TFT_CLI_EXE        - The Terraform or OpenTofu executable to use
+# TFT_VARIANT        - Name of TF workspace
+# TFT_REMOTE_BACKEND - Set TFT_REMOTE_BACKEND to "false" to force the use of local TF state:
+#
+# TFT_REMOTE_BACKEND=false
 #
 # yamllint disable rule:line-length
 
@@ -267,7 +270,7 @@ tasks:
     requires:
       vars: [TFT_CONTEXT]
 
-  ## Init tasks ##
+  ## TF initialization tasks ##
 
   init:local:
     desc: Initialise local state for TF unit
@@ -283,7 +286,7 @@ tasks:
       - init
     deps: [clean]
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_S3_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}}"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
     vars:
@@ -299,3 +302,5 @@ tasks:
         -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
         -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
         -backend-config=\"key=tft/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
+      TFT_CLI_BACKEND_OPT:
+        sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{.TFT_CLI_BACKEND_FALSE_OPT}}{{else}}{{.TFT_CLI_BACKEND_S3_OPT}}{{end}}

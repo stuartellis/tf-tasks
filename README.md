@@ -288,7 +288,7 @@ Set these variables to override the defaults:
 - `TFT_PRODUCT_NAME` - The name of the project
 - `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
 - `TFT_VARIANT` - See the section on [variants](#variants)
-- `TFT_REMOTE_BACKEND` - Enables a remote TF backend
+- `TFT_REMOTE_BACKEND` - Set TFT_REMOTE_BACKEND to "false" to force the use of local TF state
 
 ### Updating TF Tasks
 
@@ -323,13 +323,13 @@ The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates a
 
 ### Using Local TF State
 
-This tooling currently uses [remote state](https://opentofu.org/docs/language/state/remote/) by default. Set `TFT_REMOTE_BACKEND` to `false` to use [local TF state](https://opentofu.org/docs/language/settings/backends/local/):
+By default, this tooling uses Amazon S3 for [remote state storage](https://opentofu.org/docs/language/state/remote/). To initialize a unit with local state storage, use the task `tft:init:local` rather than `tft:init`:
 
 ```shell
-TFT_REMOTE_BACKEND=false
+task tft:init:local
 ```
 
-If you use the default TF code for a unit, you will also need to comment out the `backend "s3" {}` block in the `main.tf` file.
+To use local state, you will also need to comment out the `backend "s3" {}` block in the `main.tf` file.
 
 > I highly recommend that you only use TF local state for prototyping. Local state means that the resources can only be managed from a computer that has access to the state files.
 

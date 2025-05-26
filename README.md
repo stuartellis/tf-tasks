@@ -82,7 +82,7 @@ The tooling uses specific files and directories:
 |    |   |
 |    |   |- <generated contexts>
 |    |
-|    |- definitions/
+|    |- units/
 |    |    |
 |    |    |- template/
 |    |    |
@@ -114,7 +114,7 @@ The tasks:
 
 ### Units
 
-You define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _units_. Each TF unit is a subdirectory in the directory `tf/definitions/`.
+You define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _units_. Each TF unit is a subdirectory in the directory `tf/units/`.
 
 To create a new unit, use the `tft:new` task:
 
@@ -266,7 +266,7 @@ task tft:apply
 | tft:fmt       | _terraform fmt_ for a unit                                                                       |
 | tft:forget    | _terraform workspace delete_ for a variant\*                                                     |
 | tft:init      | _terraform init_ for a unit. An alias for `tft:init:s3`.                                         |
-| tft:new       | Add the source code for a new unit. Copies content from the _tf/definitions/template/_ directory |
+| tft:new       | Add the source code for a new unit. Copies content from the _tf/units/template/_ directory |
 | tft:plan      | _terraform plan_ for a unit\*                                                                    |
 | tft:rm        | Delete the source code for a unit                                                                |
 | tft:test      | _terraform test_ for a unit\*                                                                    |

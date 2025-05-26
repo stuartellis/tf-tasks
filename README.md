@@ -15,6 +15,7 @@ The tooling uses [Task](https://taskfile.dev) as the task runner for the templat
 - Multiple separate infrastructure components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as self-contained [units](#units)
 - Multiple instances of the same component with different configurations with [contexts](#contexts)
 - Temporary instances of a component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
+- [Integration testing](#testing) for every component.
 - [Switching between Terraform and OpenTofu](#using-opentofu). Use the same tasks for both.
 
 > We use the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft` in the documentation and code.
@@ -41,7 +42,7 @@ TFT_UNIT=my-app task tft:new
 
 The `tft:new` task creates a unit, a self-contained Terraform root module. The unit includes code for AWS, so that it will work immediately once the tfvar `tf_exec_role_arn` for the context is set to the IAM role that TF will use. Enable remote state storage by adding the settings to the [context](#contexts), or use [local state](#using-local-tf-state).
 
-You can then start working with your unit:
+You can then start working with your TF module:
 
 ```shell
 # Set a default context and unit
@@ -55,7 +56,7 @@ task tft:apply
 
 ```shell
 # Specifically set the unit and context for one task
-TFT_CONTEXT=dev TFT_UNIT=my-app task tft:fmt
+TFT_CONTEXT=dev TFT_UNIT=my-app task tft:test
 ```
 
 ## How It Works
@@ -147,7 +148,7 @@ The `context.json` file is the configuration file for the context. It specifies 
 - `description`
 - `environment`
 
-The `description` is deliberately not used by the tooling, so that you may use it however you wish. The `environment` is a string that is automatically provided to TF as the tfvar `environment_name`. You may use this tfvar in whatever way is appropriate for the project. For example, you could define multiple contexts with the same environment.
+The `description` is deliberately not used by the tooling, so that you may use it however you wish. The `environment` is a string that is automatically provided to TF as the tfvar `environment_name`. There are no limitations on how your code uses this tfvar.
 
 Here is an example of a `context.json` file:
 
@@ -177,13 +178,13 @@ The variants feature creates extra copies of units for development and testing. 
 
 > If you do not specify a named variant, TF uses the default workspace for the unit.
 
-### Resource Names
+### Managing Resource Names
 
 Use the `environment`, `unit_name` and `variant` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
 
-> The test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`.
-
 The code in the unit template includes the local `standard_prefix` to help you set unique names for resources.
+
+> The test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`. This ensures that test copies of resources do not conflict with existing copies.
 
 ### Shared Modules
 
@@ -193,7 +194,7 @@ The project structure also includes a `tf/shared/` directory to hold TF modules 
 
 By design, this tooling does not specify or enforce any dependencies between infrastructure components. If you need to execute changes in a particular order, specify that order in whichever system you use to carry out deployments.
 
-> This tooling does not explicitly conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). However, I do not currently use HCP Terraform to test with the stacks feature that it provides. It is unclear when this feature will be finalised, if it will be able to be used without a HCP Terraform account, or if an equivalent will be implemented by OpenTofu.
+> This tooling does not explicitly conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). However, I do not currently use HCP Terraform to test with the stacks feature that it provides. It is unclear when this feature will be finalised, or if an equivalent will be implemented by OpenTofu.
 
 ## Install
 
@@ -232,9 +233,9 @@ Before you manage resources with TF, first create at least one context:
 TFT_CONTEXT=dev task tft:context:new
 ```
 
-This creates a new context. Edit the `context.json` file in the directory `tf/contexts/<CONTEXT>/` to specify the settings for the remote state storage that you want to use and set the `environment` name.
+This creates a new context. Edit the `context.json` file in the directory `tf/contexts/<CONTEXT>/` to set the `environment` name and specify the settings for the [remote state](https://opentofu.org/docs/language/state/remote/) storage that you want to use.
 
-> By default, this tooling uses [remote state](https://opentofu.org/docs/language/state/remote/) for TF. The current version always uses S3 for remote state.
+> This tooling currently only supports Amazon S3 for remote state storage.
 
 Next, create a unit:
 
@@ -264,14 +265,14 @@ task tft:apply
 | tft:destroy   | _terraform apply -destroy_ for a unit\*                                                          |
 | tft:fmt       | _terraform fmt_ for a unit                                                                       |
 | tft:forget    | _terraform workspace delete_ for a variant\*                                                     |
-| tft:init      | _terraform init_ for a unit                                                                      |
+| tft:init      | _terraform init_ for a unit. An alias for `tft:init:s3`.                                         |
 | tft:new       | Add the source code for a new unit. Copies content from the _tf/definitions/template/_ directory |
 | tft:plan      | _terraform plan_ for a unit\*                                                                    |
 | tft:rm        | Delete the source code for a unit                                                                |
 | tft:test      | _terraform test_ for a unit\*                                                                    |
 | tft:validate  | _terraform validate_ for a unit\*                                                                |
 
-\*: These tasks require that you first run `tft:init` to [initialise](https://opentofu.org/docs/cli/commands/init/) the unit.
+\*: These tasks require that you first [initialise](https://opentofu.org/docs/cli/commands/init/) the unit.
 
 ### The `tft:context` Tasks
 
@@ -280,6 +281,14 @@ task tft:apply
 | tft:context:list | List the contexts                                                            |
 | tft:context:new  | Add a new context. Copies content from the _tf/contexts/template/_ directory |
 | tft:context:rm   | Delete the directory for a context                                           |
+
+### The `tft:init` Tasks
+
+| Name           | Description                                               |
+| -------------- | --------------------------------------------------------- |
+| tft:init:local | _terraform init_ for a unit, with local state.            |
+| tft:init:s3    | _terraform init_ for a unit, with Amazon S3 remote state. |
+|                |
 
 ### Settings for Features
 
@@ -319,7 +328,27 @@ The tooling automatically sets the value of the tfvar `variant` to match `TFT_VA
 
 Only set `TFT_VARIANT` when you want to create an alternate version of a unit. If you do not specify a variant name, TF uses the default workspace for state, and the value of the tfvar `variant` is `default`.
 
-The [test](https://opentofu.org/docs/cli/commands/test/) feature of TF creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of units do not conflict with other copies, the test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`.
+### Testing
+
+This tooling supports the [test](https://opentofu.org/docs/cli/commands/test/) features of TF. Each unit includes a minimum test configuration, so that you can run immediately run tests on the module as soon as it is created.
+
+A test creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of units do not conflict with other copies of the resources, the test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`.
+
+To validate a unit before any resources are deployed, use the `tft:validate` task:
+
+```shell
+export TFT_CONTEXT=dev TFT_UNIT=my-app
+task tft:validate
+```
+
+To run tests on a unit, use the `tft:test` task:
+
+```shell
+export TFT_CONTEXT=dev TFT_UNIT=my-app
+task tft:test
+```
+
+The tests create and destroy temporary copies of resources on the cloud services that being managed. Check the expected behaviour of the resources, because cloud services may not immediately remove some types of resources.
 
 ### Using Local TF State
 
@@ -335,7 +364,7 @@ To use local state, you will also need to comment out the `backend "s3" {}` bloc
 
 ### Using OpenTofu
 
-By default, this tooling uses Terraform. To use OpenTofu, set `TFT_CLI_EXE` as an environment variable, with the value `tofu`:
+By default, this tooling uses the copy of Terraform that is found on your `PATH`. Set `TFT_CLI_EXE` as an environment variable to specify the path to the tool that you wish to use. For example, to use OpenTofu, set `TFT_CLI_EXE` with the value `tofu`:
 
 ```shell
 TFT_CLI_EXE=tofu

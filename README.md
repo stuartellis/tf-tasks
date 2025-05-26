@@ -12,7 +12,7 @@ This [Copier](https://copier.readthedocs.io/en/stable/) template provides files 
 
 The tooling uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects. The tasks provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
-- Multiple separate infrastructure components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as self-contained [units](#units)
+- Multiple infrastructure components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as separate [units](#units)
 - Multiple instances of the same component with different configurations with [contexts](#contexts)
 - Temporary instances of a component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 - [Integration testing](#testing) for every component.
@@ -40,7 +40,7 @@ TFT_CONTEXT=dev task tft:context:new
 TFT_UNIT=my-app task tft:new
 ```
 
-The `tft:new` task creates a unit, a self-contained Terraform root module. The unit includes code for AWS, so that it will work immediately once the tfvar `tf_exec_role_arn` for the context is set to the IAM role that TF will use. Enable remote state storage by adding the settings to the [context](#contexts), or use [local state](#using-local-tf-state).
+The `tft:new` task creates a unit, a complete Terraform root module. This root module includes code for AWS, so that it will work immediately once the tfvar `tf_exec_role_arn` for the context is set to the AWS IAM role that TF will use. Enable remote state storage by adding the settings to the [context](#contexts), or use [local state](#using-local-tf-state).
 
 You can then start working with your TF module:
 
@@ -256,21 +256,21 @@ task tft:apply
 
 ### The `tft` Tasks
 
-| Name          | Description                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------ |
-| tft:apply     | _terraform apply_ for a unit\*                                                                   |
-| tft:check-fmt | Checks whether _terraform fmt_ would change the code for a unit                                  |
-| tft:clean     | Remove the generated files for a unit                                                            |
-| tft:console   | _terraform console_ for a unit\*                                                                 |
-| tft:destroy   | _terraform apply -destroy_ for a unit\*                                                          |
-| tft:fmt       | _terraform fmt_ for a unit                                                                       |
-| tft:forget    | _terraform workspace delete_ for a variant\*                                                     |
-| tft:init      | _terraform init_ for a unit. An alias for `tft:init:s3`.                                         |
+| Name          | Description                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| tft:apply     | _terraform apply_ for a unit\*                                                             |
+| tft:check-fmt | Checks whether _terraform fmt_ would change the code for a unit                            |
+| tft:clean     | Remove the generated files for a unit                                                      |
+| tft:console   | _terraform console_ for a unit\*                                                           |
+| tft:destroy   | _terraform apply -destroy_ for a unit\*                                                    |
+| tft:fmt       | _terraform fmt_ for a unit                                                                 |
+| tft:forget    | _terraform workspace delete_ for a variant\*                                               |
+| tft:init      | _terraform init_ for a unit. An alias for `tft:init:s3`.                                   |
 | tft:new       | Add the source code for a new unit. Copies content from the _tf/units/template/_ directory |
-| tft:plan      | _terraform plan_ for a unit\*                                                                    |
-| tft:rm        | Delete the source code for a unit                                                                |
-| tft:test      | _terraform test_ for a unit\*                                                                    |
-| tft:validate  | _terraform validate_ for a unit\*                                                                |
+| tft:plan      | _terraform plan_ for a unit\*                                                              |
+| tft:rm        | Delete the source code for a unit                                                          |
+| tft:test      | _terraform test_ for a unit\*                                                              |
+| tft:validate  | _terraform validate_ for a unit\*                                                          |
 
 \*: These tasks require that you first [initialise](https://opentofu.org/docs/cli/commands/init/) the unit.
 

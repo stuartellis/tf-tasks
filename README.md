@@ -185,7 +185,7 @@ Use the `environment`, `unit_name` and `variant` tfvars in your TF code to defin
 For convenience, the code in the unit template includes locals and outputs to help with this:
 
 - `tft_handle` - Normalizes the `unit_name` to the first 12 characters, in lowercase
-- `tft_standard_prefix` - Combines `environment`, `unit_name`, `variant` and `handle`, separated by hyphens
+- `tft_standard_prefix` - Combines `environment`, `unit_name`, `variant` and `tft_handle`, separated by hyphens
 
 To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and variant names that are longer than 7 characters, and other names that are longer than 12 characters.
 

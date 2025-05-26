@@ -19,7 +19,7 @@ run "match_expected_meta_params" {
   }
 
   assert {
-    condition     = output.ssm_param_meta_unit_present_path == "/metadata/${var.product_name}/${var.unit_name}/${var.environment_name}/${var.variant}/present"
-    error_message = "Specified path ${output.ssm_param_meta_unit_present_path} does not expected path /metadata/${var.product_name}/${var.unit_name}/${var.environment_name}/${var.variant}/present."
+    condition     = output.ssm_param_meta_tft_unit_present_path == "/metadata/${var.product_name}/${var.unit_name}/${var.environment_name}/${var.variant}/present"
+    error_message = "Specified path ${output.ssm_param_meta_tft_unit_present_path} does not expected path /metadata/${var.product_name}/${var.unit_name}/${var.environment_name}/${var.variant}/present."
   }
 }

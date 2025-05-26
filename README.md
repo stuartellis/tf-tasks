@@ -182,9 +182,16 @@ The variants feature creates extra copies of units for development and testing. 
 
 Use the `environment`, `unit_name` and `variant` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
 
-The code in the unit template includes the local `standard_prefix` to help you set unique names for resources.
+For convenience, the code in the unit template includes locals and outputs to help with this:
 
-> The test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`. This ensures that test copies of resources do not conflict with existing copies.
+- `tft_handle` - Normalizes the `unit_name` to the first 12 characters, in lowercase
+- `tft_standard_prefix` - Combines `environment`, `unit_name`, `variant` and `handle`, separated by hyphens
+
+To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and variant names that are longer than 7 characters, and other names that are longer than 12 characters.
+
+To ensure that the template code is compatible with older versions of Terraform, it currently does not use validations on the tfvars.
+
+> The test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`. If you use the `variant` in resource names, this ensures that test copies of resources do not conflict with existing resources that were deployed with the same TF module.
 
 ### Shared Modules
 

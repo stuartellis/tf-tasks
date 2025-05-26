@@ -4,6 +4,6 @@
 #
 
 locals {
-  handle          = "${var.unit_name}"
-  standard_prefix = "${var.environment_name}-${var.variant}-${local.handle}"
+  tft_handle          = substr(lower(var.unit_name), 0, 12)
+  tft_standard_prefix = "${var.environment_name}-${var.variant}-${local.tft_handle}"
 }

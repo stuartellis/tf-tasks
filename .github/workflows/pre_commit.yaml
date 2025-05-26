@@ -20,9 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: just
       - uses: aquasecurity/setup-trivy@v0.2.3
         with:
           version: v0.58.0

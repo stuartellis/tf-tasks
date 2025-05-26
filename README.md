@@ -288,7 +288,6 @@ task tft:apply
 | -------------- | --------------------------------------------------------- |
 | tft:init:local | _terraform init_ for a unit, with local state.            |
 | tft:init:s3    | _terraform init_ for a unit, with Amazon S3 remote state. |
-|                |
 
 ### Settings for Features
 

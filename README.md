@@ -12,7 +12,7 @@ This [Copier](https://copier.readthedocs.io/en/stable/) template provides files 
 
 The tooling uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects. The tasks provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
-- Multiple separate infrastructure components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as self-contained [units](#units)
+- Multiple infrastructure components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as separate [units](#units)
 - Multiple instances of the same component with different configurations with [contexts](#contexts)
 - Temporary instances of a component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 - [Integration testing](#testing) for every component.
@@ -40,7 +40,7 @@ TFT_CONTEXT=dev task tft:context:new
 TFT_UNIT=my-app task tft:new
 ```
 
-The `tft:new` task creates a unit, a self-contained Terraform root module. The unit includes code for AWS, so that it will work immediately once the tfvar `tf_exec_role_arn` for the context is set to the IAM role that TF will use. Enable remote state storage by adding the settings to the [context](#contexts), or use [local state](#using-local-tf-state).
+The `tft:new` task creates a unit, a complete Terraform root module. This root module includes code for AWS, so that it will work immediately once the tfvar `tf_exec_role_arn` for the context is set to the AWS IAM role that TF will use. Enable remote state storage by adding the settings to the [context](#contexts), or use [local state](#using-local-tf-state).
 
 You can then start working with your TF module:
 
@@ -82,7 +82,7 @@ The tooling uses specific files and directories:
 |    |   |
 |    |   |- <generated contexts>
 |    |
-|    |- definitions/
+|    |- units/
 |    |    |
 |    |    |- template/
 |    |    |
@@ -114,7 +114,7 @@ The tasks:
 
 ### Units
 
-You define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _units_. Each TF unit is a subdirectory in the directory `tf/definitions/`.
+You define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _units_. Each TF unit is a subdirectory in the directory `tf/units/`.
 
 To create a new unit, use the `tft:new` task:
 
@@ -182,9 +182,16 @@ The variants feature creates extra copies of units for development and testing. 
 
 Use the `environment`, `unit_name` and `variant` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
 
-The code in the unit template includes the local `standard_prefix` to help you set unique names for resources.
+For convenience, the code in the unit template includes locals and outputs to help with this:
 
-> The test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`. This ensures that test copies of resources do not conflict with existing copies.
+- `tft_handle` - Normalizes the `unit_name` to the first 12 characters, in lowercase
+- `tft_standard_prefix` - Combines `environment`, `unit_name`, `variant` and `tft_handle`, separated by hyphens
+
+To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and variant names that are longer than 7 characters, and other names that are longer than 12 characters.
+
+To ensure that the template code is compatible with older versions of Terraform, it currently does not use validations on the tfvars.
+
+> The test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`. If you use the `variant` in resource names, this ensures that test copies of resources do not conflict with existing resources that were deployed with the same TF module.
 
 ### Shared Modules
 
@@ -194,7 +201,7 @@ The project structure also includes a `tf/shared/` directory to hold TF modules 
 
 By design, this tooling does not specify or enforce any dependencies between infrastructure components. If you need to execute changes in a particular order, specify that order in whichever system you use to carry out deployments.
 
-> This tooling does not explicitly conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). However, I do not currently use HCP Terraform to test with the stacks feature that it provides. It is unclear when this feature will be finalised, or if an equivalent will be implemented by OpenTofu.
+> This tooling does not explicitly support or conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). I do not currently test with the stacks feature. It is unclear when this feature will be finalised, or if an equivalent will be implemented by OpenTofu.
 
 ## Install
 
@@ -256,21 +263,21 @@ task tft:apply
 
 ### The `tft` Tasks
 
-| Name          | Description                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------ |
-| tft:apply     | _terraform apply_ for a unit\*                                                                   |
-| tft:check-fmt | Checks whether _terraform fmt_ would change the code for a unit                                  |
-| tft:clean     | Remove the generated files for a unit                                                            |
-| tft:console   | _terraform console_ for a unit\*                                                                 |
-| tft:destroy   | _terraform apply -destroy_ for a unit\*                                                          |
-| tft:fmt       | _terraform fmt_ for a unit                                                                       |
-| tft:forget    | _terraform workspace delete_ for a variant\*                                                     |
-| tft:init      | _terraform init_ for a unit. An alias for `tft:init:s3`.                                         |
-| tft:new       | Add the source code for a new unit. Copies content from the _tf/definitions/template/_ directory |
-| tft:plan      | _terraform plan_ for a unit\*                                                                    |
-| tft:rm        | Delete the source code for a unit                                                                |
-| tft:test      | _terraform test_ for a unit\*                                                                    |
-| tft:validate  | _terraform validate_ for a unit\*                                                                |
+| Name          | Description                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| tft:apply     | _terraform apply_ for a unit\*                                                             |
+| tft:check-fmt | Checks whether _terraform fmt_ would change the code for a unit                            |
+| tft:clean     | Remove the generated files for a unit                                                      |
+| tft:console   | _terraform console_ for a unit\*                                                           |
+| tft:destroy   | _terraform apply -destroy_ for a unit\*                                                    |
+| tft:fmt       | _terraform fmt_ for a unit                                                                 |
+| tft:forget    | _terraform workspace delete_ for a variant\*                                               |
+| tft:init      | _terraform init_ for a unit. An alias for `tft:init:s3`.                                   |
+| tft:new       | Add the source code for a new unit. Copies content from the _tf/units/template/_ directory |
+| tft:plan      | _terraform plan_ for a unit\*                                                              |
+| tft:rm        | Delete the source code for a unit                                                          |
+| tft:test      | _terraform test_ for a unit\*                                                              |
+| tft:validate  | _terraform validate_ for a unit\*                                                          |
 
 \*: These tasks require that you first [initialise](https://opentofu.org/docs/cli/commands/init/) the unit.
 

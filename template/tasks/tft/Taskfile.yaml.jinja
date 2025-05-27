@@ -67,7 +67,6 @@ vars:
   TFT_UNIT_DIR: "{{.TFT_UNITS_DIR}}/{{.TFT_UNIT}}"
   TFT_TMP_DIR: "{{.ROOT_DIR}}/tmp/{{.TFT_ROOT_DIR}}"
 
-  TFT_CLI_BACKEND_FALSE_OPT: "-backend=false"
   TFT_CLI_CHDIR_OPT: "-chdir={{.TFT_UNIT_DIR}}"
   TFT_CLI_VAR_FILES_OPT: "-var-file={{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars -var-file={{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
 
@@ -276,7 +275,7 @@ tasks:
     desc: Initialise local state for TF unit
     deps: [clean]
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_FALSE_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
 
@@ -303,4 +302,4 @@ tasks:
         -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
         -backend-config=\"key=tft/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
       TFT_CLI_BACKEND_OPT:
-        sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{.TFT_CLI_BACKEND_FALSE_OPT}}{{else}}{{.TFT_CLI_BACKEND_S3_OPT}}{{end}}
+        sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{else}}{{.TFT_CLI_BACKEND_S3_OPT}}{{end}}

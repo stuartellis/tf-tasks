@@ -149,10 +149,10 @@ Each context is a subdirectory in the directory `tf/contexts/` that contains a `
 
 The `context.json` file is the configuration file for the context. It specifies metadata and settings for TF [remote state](https://opentofu.org/docs/language/state/remote/). Each `context.json` file specifies two items of metadata:
 
-- `description`
 - `environment`
+- `description`
 
-The `description` is deliberately not used by the tooling, so that you may use it however you wish. The `environment` is a string that is automatically provided to TF as the tfvar `environment_name`. There are no limitations on how your code uses this tfvar.
+The `environment` is a string that is automatically provided to TF as the tfvar `environment_name`. There are no limitations on how your code uses this tfvar. The `description` is deliberately not used by this tooling, so that you may use it however you wish.
 
 Here is an example of a `context.json` file:
 

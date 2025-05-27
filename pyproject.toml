@@ -6,7 +6,7 @@
 
 [project]
 name = "tf-tasks"
-version = "0.36.1"
+version = "0.37.0"
 description = "Terraform project template & tooling for monorepos"
 readme = "README.md"
 requires-python = ">=3.12"

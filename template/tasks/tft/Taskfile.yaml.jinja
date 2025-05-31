@@ -9,13 +9,17 @@
 #
 # https://taskfile.dev
 #
+# See the project README for details:
+#
+# https://github.com/stuartellis/tf-tasks
+#
 # Requirements:
 #
-# - Git
 # - Any UNIX shell, such as Bash or Fish
+# - Git
 # - Terraform or OpenTofu
 #
-# It requires these environment variables to work on a unit:
+# It requires these environment variables to work on a TF unit:
 #
 # TFT_CONTEXT - TF configuration
 # TFT_UNIT    - Name of unit
@@ -37,6 +41,7 @@ version: "3"
 
 vars:
   # Defaults
+
   DEFAULT_TFT_CLI_EXE: terraform
   DEFAULT_TFT_VARIANT: default
   DEFAULT_TFT_PRODUCT_NAME:
@@ -56,6 +61,7 @@ vars:
     ref: "default .DEFAULT_TFT_PRODUCT_NAME .TFT_PRODUCT_NAME"
 
   # Pre-set variables
+
   TFT_ROOT_DIR: tf
   TFT_SHARED_CONTEXT: all
   TFT_TEMPLATE_NAME: template

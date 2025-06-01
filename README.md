@@ -16,7 +16,9 @@ The tooling uses [Task](https://taskfile.dev) as the task runner for the templat
 - Multiple instances of the same component with different configurations with [contexts](#contexts)
 - Temporary instances of a component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 - [Integration testing](#testing) for every component.
-- [Switching between Terraform and OpenTofu](#using-opentofu). Use the same tasks for both.
+- [Migrating from Terraform to OpenTofu](#using-opentofu). You use the same tasks for both.
+
+This tooling is also specifically designed so that you can use it alongside other tools, or stop using it at any time. The [root modules](#units) implement standard structures and code.
 
 > We use the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft` in the documentation and code.
 
@@ -193,7 +195,7 @@ Use the `environment`, `unit_name` and `variant` tfvars in your TF code to defin
 For convenience, the code in the unit template includes locals and outputs to help with this:
 
 - `tft_handle` - Normalizes the `unit_name` to the first 12 characters, in lowercase
-- `tft_standard_prefix` - Combines `environment`, `unit_name`, `variant` and `tft_handle`, separated by hyphens
+- `tft_standard_prefix` - Combines `environment`, `variant` and `tft_handle`, separated by hyphens
 
 To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and variant names that are longer than 7 characters, and unit names that are longer than 12 characters.
 
@@ -203,7 +205,9 @@ To ensure that the template code is compatible with older versions of Terraform,
 
 ### Shared Modules
 
-The project structure also includes a `tf/shared/` directory to hold TF modules that are shared between root modules in the same project. To share modules between projects, [publish them to a registry](https://opentofu.org/docs/language/modules/#published-modules).
+The project structure also includes a `tf/shared/` directory to hold TF modules that are shared between the root modules in the same project. By design, the tooling does not manage any of these shared modules, and does not impose any requirements on them.
+
+To share modules between projects, [publish them to a registry](https://opentofu.org/docs/language/modules/#published-modules).
 
 ### Dependencies Between Units
 
@@ -221,7 +225,7 @@ You can either create a new project with this template or add the template to an
 uvx copier copy git+https://github.com/stuartellis/tf-tasks my-project
 ```
 
-I recommend that you use a tool version manager to install copies of Terraform and OpenTofu. Consider using either [tenv](https://tofuutils.github.io/tenv/), which is specifically designed for TF tools, or the general-purpose [mise](https://mise.jdx.dev/) framework. The generated projects include a `.terraform-version` file so that your tool version manager can install the Terraform version that you specify.
+I recommend that you use a tool version manager to install copies of Terraform and OpenTofu. Consider using either [tenv](https://tofuutils.github.io/tenv/), which is specifically designed for TF tools, or the general-purpose [mise](https://mise.jdx.dev/) framework. The generated projects include a `.terraform-version` file so that your tool version manager can immediately install and use the Terraform version that you specify.
 
 ## Usage
 
@@ -268,6 +272,16 @@ task tft:apply
 ```
 
 > You will see a warning when you run `init` with a current version of Terraform. This is because Hashicorp are [deprecating the use of DynamoDB with S3 remote state](https://developer.hashicorp.com/terraform/language/backend/s3#state-locking). To support older versions of Terraform, this tooling will continue to use DynamoDB for a period of time.
+
+### Working with TF Versions
+
+By design, this tooling uses the copy of Terraform or OpenTofu that you provide. It does not install or manage copies of Terraform and OpenTofu, and is not dependent on specific versions of these tools.
+
+You will need to use different versions of Terraform and OpenTofu for different projects. To handle this, use a tool version manager. The version manager will install the versions that you need and automatically switch between them as needed. Consider using [tenv](https://tofuutils.github.io/tenv/), which is a version manager that is specifically designed for TF tools. For projects that use multiple technologies, consider using [mise](https://mise.jdx.dev/), which can manage versions of many tools and programming languages.
+
+The generated projects include a `.terraform-version` file so that your tool version manager installs and use the Terraform version that you specify. To use OpenTofu, add an `.opentofu-version` file to enable your tool version manager to install and use the OpenTofu version that you specify.
+
+> This tooling can [switch between Terraform and OpenTofu](#using-opentofu). This is specifically to help you migrate projects from one of these tools to the other.
 
 ### The `tft` Tasks
 
@@ -383,6 +397,10 @@ By default, this tooling uses the copy of Terraform that is found on your `PATH`
 ```shell
 TFT_CLI_EXE=tofu
 ```
+
+To specify which version of OpenTofu to use, create a `.opentofu-version` file. This file should contain the version of OpenTofu and nothing else, e.g. `1.9.1`.
+
+> Remember that if you switch between Terraform and OpenTofu, you will need to initialise your unit again, and when you run `apply` it will migrate the TF state. The OpenTofu Website provides [migration guides](https://opentofu.org/docs/intro/migration/), which includes information about code changes that you may need to make.
 
 ## Contributing
 

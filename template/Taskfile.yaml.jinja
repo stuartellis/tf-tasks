@@ -11,6 +11,13 @@ version: "3"
 
 includes:
   tft: tasks/tft
+  tft:image:
+    taskfile: template/tasks/tft-image
+    vars:
+      TFT_CONTAINER_IMAGE_BASE: alpine:latest
+      TFT_CONTAINER_IMAGE_BUILD_FILE: ./template/containers/tft/Containerfile
+      TFT_CONTAINER_IMAGE_PLATFORM: "{{ARCH}}"
+      TFT_CONTAINER_IMAGE_TASK_EXE_VERSION: "{{.TASK_VERSION}}"
 
 tasks:
   default:

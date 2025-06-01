@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: [[ copyright_date ]]-present [[ maintainer_fullname ]] <[[ maintainer_email ]]>
+#
+# SPDX-License-Identifier: MIT
+#
+
+ARG CONTAINER_IMAGE_BASE=alpine:latest
+ARG TASK_VERSION
+ARG TF_TOOL_NAME
+ARG TF_TOOL_VERSION
+
+#============ BASE ===========
+
+FROM ${CONTAINER_IMAGE_BASE} as base_alpine
+
+RUN apk update \
+    && apk upgrade --no-cache
+
+#========== BASE FOR TASK ==========
+
+FROM base_alpine as base_task
+
+ARG TASK_VERSION
+
+RUN apk add go-task=~${TASK_VERSION} --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
+RUN ln -s $(which go-task) /usr/local/bin/task
+
+RUN addgroup -g 1000 appusers \
+  && adduser -D -u 1000 -h /home/appuser -G appusers appuser
+
+RUN mkdir /opt/app \
+  && chown -R appuser:appusers /opt/app \
+  && chmod 2700 /opt/app
+
+#========== BASE FOR TF ==========
+
+FROM base_task as base_tf
+
+ARG TF_TOOL_NAME
+ARG TF_TOOL_VERSION
+
+RUN apk add cosign git --no-cache
+RUN apk add tenv --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/
+
+USER appuser
+RUN tenv ${TF_TOOL_NAME} install ${TF_TOOL_VERSION}
+
+#========== RUNNER FOR TASK ==========
+
+FROM base_tf as runner_task
+
+USER appuser
+
+CMD ["go-task"]

@@ -1,0 +1,118 @@
+# SPDX-FileCopyrightText: 2024-present Stuart Ellis <stuart@stuartellis.name>
+#
+# SPDX-License-Identifier: MIT
+#
+# Container tasks for the Task runner.
+#
+# These rely on Docker or Podman.
+# Use TFT_CONTAINER_EXE to specify which tool to use.
+#
+# Required vars:
+#
+# - TFT_CONTAINER_IMAGE_BASE - Base container image. Example: alpine:3.21
+# - TFT_CONTAINER_IMAGE_BUILD_FILE - Dockerfile. Example: ./containers/tft/Containerfile
+# - TFT_CONTAINER_IMAGE_PLATFORM - CPU architecture for image. Example: "{{ARCH}}"
+# - TFT_CONTAINER_IMAGE_TASK_EXE_VERSION - Version of Task for container image. Example: "{{TASK_VERSION}}"
+#
+# Set these variables to override the defaults:
+#
+# TFT_CLI_EXE        - The Terraform or OpenTofu executable to use
+# TFT_CONTAINER_EXE  - The Docker or Podman executable to use
+# TFT_PRODUCT_NAME   - Name of project, used in image name
+#
+# yamllint disable rule:line-length
+
+version: "3"
+
+vars:
+  DEFAULT_TFT_CLI_EXE: terraform
+  DEFAULT_TFT_CONTAINER_EXE: docker
+  DEFAULT_TFT_PRODUCT_NAME:
+    ref: "base .ROOT_DIR"
+
+  # Variables to override
+
+  # Override with TFT_CLI_EXE to specify the Terraform or OpenTofu executable
+  # To use OpenTofu, specify: TFT_CLI_EXE=tofu
+  CURRENT_TFT_CLI_EXE:
+    ref: "default .DEFAULT_TFT_CLI_EXE .TFT_CLI_EXE"
+  # Override with TFT_CONTAINER_EXE to specify Docker or Podman executable
+  # To use Podman, specify: TFT_CONTAINER_EXE=podman
+  CURRENT_TFT_CONTAINER_EXE:
+    ref: "default .DEFAULT_TFT_CONTAINER_EXE .TFT_CONTAINER_EXE"
+  # Override with TFT_PRODUCT_NAME to specify the name of the product or project
+  CURRENT_TFT_PRODUCT_NAME:
+    ref: "default .DEFAULT_TFT_PRODUCT_NAME .TFT_PRODUCT_NAME"
+
+  # Calculated variables
+
+  TFT_CONTAINER_IMAGE_NAME: "tft-{{.CURRENT_TFT_PRODUCT_NAME}}-{{.CURRENT_TFT_CLI_EXE }}"
+  TFT_CONTAINER_IMAGE_VERSION:
+    sh: echo $(git rev-parse --short HEAD)-git
+  TFT_CONTAINER_IMAGE_TAG: "{{.TFT_CONTAINER_IMAGE_NAME}}:{{.TFT_CONTAINER_IMAGE_VERSION}}"
+
+  TFT_CONTAINER_IMAGE_TF_TOOL_NAME:
+    ref: "base .CURRENT_TFT_CLI_EXE"
+  TFT_CONTAINER_IMAGE_TF_TOOL_VERSION:
+    sh: echo {{if eq .TFT_CONTAINER_IMAGE_TF_TOOL_NAME "terraform"}}$(cat .terraform-version){{else}}$(cat .opentofu-version){{end}}
+
+  TFT_CONTAINER_IMAGE_BUILD_ARGS: "--build-arg CONTAINER_IMAGE_BASE={{.TFT_CONTAINER_IMAGE_BASE}} --build-arg TASK_VERSION={{.TFT_CONTAINER_IMAGE_TASK_EXE_VERSION}} --build-arg TF_TOOL_NAME={{.TFT_CONTAINER_IMAGE_TF_TOOL_NAME}} --build-arg TF_TOOL_VERSION={{.TFT_CONTAINER_IMAGE_TF_TOOL_VERSION}}"
+  TFT_CONTAINER_IMAGE_BUILD_LABELS: "--label org.opencontainers.image.version={{.TFT_CONTAINER_IMAGE_VERSION}}"
+
+tasks:
+  build:
+    desc: Build a container image for tft.
+    cmds:
+      - "{{.CURRENT_TFT_CONTAINER_EXE}} buildx build --platform {{.TFT_CONTAINER_IMAGE_PLATFORM}} -f {{.TFT_CONTAINER_IMAGE_BUILD_FILE}} -t {{.TFT_CONTAINER_IMAGE_TAG}} {{.TFT_CONTAINER_IMAGE_BUILD_ARGS}} {{.TFT_CONTAINER_IMAGE_BUILD_LABELS}} ."
+    requires:
+      vars:
+        [
+          CURRENT_TFT_CONTAINER_EXE,
+          TFT_CONTAINER_IMAGE_PLATFORM,
+          TFT_CONTAINER_IMAGE_BUILD_FILE,
+          TFT_CONTAINER_IMAGE_TAG,
+          TFT_CONTAINER_IMAGE_BUILD_ARGS,
+          TFT_CONTAINER_IMAGE_BUILD_LABELS,
+        ]
+
+  rebuild:
+    desc: Force a complete rebuild of the tft container image.
+    cmds:
+      - "{{.CURRENT_TFT_CONTAINER_EXE}} buildx build --platform {{.TFT_CONTAINER_IMAGE_PLATFORM}} -f {{.TFT_CONTAINER_IMAGE_BUILD_FILE}} -t {{.TFT_CONTAINER_IMAGE_TAG}} --no-cache --pull {{.TFT_CONTAINER_IMAGE_BUILD_ARGS}} {{.TFT_CONTAINER_IMAGE_BUILD_LABELS}} ."
+    requires:
+      vars:
+        [
+          CURRENT_TFT_CONTAINER_EXE,
+          TFT_CONTAINER_IMAGE_PLATFORM,
+          TFT_CONTAINER_IMAGE_BUILD_FILE,
+          TFT_CONTAINER_IMAGE_TAG,
+          TFT_CONTAINER_IMAGE_BUILD_ARGS,
+          TFT_CONTAINER_IMAGE_BUILD_LABELS,
+        ]
+
+  run:
+    desc: Run Task in the container image for tft.
+    cmds:
+      - "{{.CURRENT_TFT_CONTAINER_EXE}} run --rm -it --user {{.USER_ID}} --mount type=bind,source=.,destination=/opt/app -w /opt/app {{.TFT_CONTAINER_IMAGE_TAG}} {{.CLI_ARGS}}"
+    vars:
+      USER_ID:
+        sh: id -u
+    requires:
+      vars: [CURRENT_TFT_CONTAINER_EXE, TFT_CONTAINER_IMAGE_TAG, USER_ID]
+
+  shell:
+    desc: Open a shell in the tft container image.
+    cmds:
+      - "{{.CURRENT_TFT_CONTAINER_EXE}} run --rm -it --user {{.USER_ID}} --mount type=bind,source=.,destination=/opt/app -w /opt/app {{.TFT_CONTAINER_IMAGE_NAME}}:{{.TFT_CONTAINER_IMAGE_VERSION}} /bin/sh"
+    interactive: true
+    vars:
+      USER_ID:
+        sh: id -u
+    requires:
+      vars:
+        [
+          CURRENT_TFT_CONTAINER_EXE,
+          TFT_CONTAINER_IMAGE_NAME,
+          TFT_CONTAINER_IMAGE_VERSION,
+          USER_ID,
+        ]

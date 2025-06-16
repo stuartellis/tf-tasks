@@ -11,14 +11,14 @@
 
 _commit: v0.17.0
 _src_path: git+https://github.com/stuartellis/copier-sve-baseline
-copyright_date: '2025'
+copyright_date: "2025"
 copyright_holder: Stuart Ellis
 copyright_holder_email: stuart@stuartellis.name
 maintainer_email: stuart@stuartellis.name
 maintainer_fullname: Stuart Ellis
 maintainer_username: stuartellis
 project_description: Copier template for Terraform and OpenTofu projects
-project_name: copier-sve-tf
-repository_name: copier-sve-tf
+project_name: tf-tasks
+repository_name: tf-tasks
 repository_namespace: stuartellis
 repository_provider: github.com

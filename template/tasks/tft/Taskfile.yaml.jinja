@@ -179,7 +179,7 @@ tasks:
       - for:
           var: TFT_FILTERED_TFT_CONTEXTS
         cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
-      - cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/all.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
+      - cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/{{.TFT_SHARED_CONTEXT}}.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
     requires:
       vars: [TFT_UNIT]
 
@@ -203,6 +203,7 @@ tasks:
     desc: Remove code for TF unit
     cmds:
       - rm -fr "{{.TFT_UNITS_DIR}}/{{.TFT_UNIT}}"
+      - rm -f "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
       - for:
           var: TFT_FILTERED_TFT_CONTEXTS
         cmd: rm -f "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"

@@ -14,14 +14,14 @@ terraform {
   }
 }
 
-resource "random_string" "variant_suffix" {
+resource "random_string" "track_suffix" {
   length  = 5
   numeric = false
   special = false
   upper   = false
 }
 
-output "random_variant_name" {
-  value       = "tt${random_string.variant_suffix.result}"
-  description = "A random variant name."
+output "random_track_name" {
+  value       = "tt${random_string.track_suffix.result}"
+  description = "A random track name."
 }

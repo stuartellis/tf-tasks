@@ -14,7 +14,7 @@ The tooling uses [Task](https://taskfile.dev) as the task runner for the templat
 
 - Multiple infrastructure components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as separate [units](#units)
 - Multiple instances of the same component with different configurations with [contexts](#contexts)
-- Temporary instances of a component for testing or development with [workspaces](https://opentofu.org/docs/language/state/workspaces/).
+- Extra instances of a component for testing or development with [tracks](#tracks). Each track is a separate [workspace](https://opentofu.org/docs/language/state/workspaces/).
 - [Integration testing](#testing) for every component.
 - [Migrating from Terraform to OpenTofu](#using-opentofu). You use the same tasks for both.
 
@@ -131,9 +131,9 @@ You are free to change units as you need. For example, you can completely remove
 - `environment_name` (string)
 - `product_name` (string)
 - `unit_name` (string)
-- `variant` (string)
+- `track` (string)
 
-To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and variant names that are longer than 7 characters, and unit names that are longer than 12 characters.
+To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and track names that are longer than 7 characters, and unit names that are longer than 12 characters.
 
 > If you amend a module to not use AWS, ensure that you change the tests.
 
@@ -182,26 +182,26 @@ To avoid issues, I recommend that you use context names that only include lowerc
 
 > Contexts exist to configure TF. To avoid coupling live resources directly to individual contexts, the tooling does not pass the name of the active context to the TF code, only the `environment` name that it specifies.
 
-### Variants
+### Tracks
 
-The variants feature creates extra copies of units for development and testing. A variant is a separate instance of a unit. Each variant of a unit uses the same configuration as other instances with the specified context, but has a unique identifier. Every variant is a TF [workspace](https://opentofu.org/docs/language/state/workspaces), so has separate state.
+The tracks feature creates extra copies of units for development and testing. A track is a separate instance of a unit. Each track of a unit uses the same configuration as other instances with the specified context, but has a unique identifier. Every track is a TF [workspace](https://opentofu.org/docs/language/state/workspaces), so has separate state.
 
-> If you do not specify a named variant, TF uses the default workspace for the unit.
+> If you do not specify a named track, TF uses the default workspace for the unit.
 
 ### Managing Resource Names
 
-Use the `environment`, `unit_name` and `variant` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
+Use the `environment`, `unit_name` and `track` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
 
 For convenience, the code in the unit template includes locals and outputs to help with this:
 
 - `tft_handle` - Normalizes the `unit_name` to the first 12 characters, in lowercase
-- `tft_standard_prefix` - Combines `environment`, `variant` and `tft_handle`, separated by hyphens
+- `tft_standard_prefix` - Combines `environment`, `track` and `tft_handle`, separated by hyphens
 
-To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and variant names that are longer than 7 characters, and unit names that are longer than 12 characters.
+To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and track names that are longer than 7 characters, and unit names that are longer than 12 characters.
 
 To ensure that the template code is compatible with older versions of Terraform, it currently does not use validations on the tfvars.
 
-> The test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`. If you use the `variant` in resource names, this ensures that test copies of resources do not conflict with existing resources that were deployed with the same TF module.
+> The test in the unit template includes code to set the value of `track` to a random string with the prefix `tt`. If you use the `track` in resource names, this ensures that test copies of resources do not conflict with existing resources that were deployed with the same TF module.
 
 ### Shared Modules
 
@@ -293,7 +293,7 @@ The generated projects include a `.terraform-version` file so that your tool ver
 | tft:console   | _terraform console_ for a unit\*                                                           |
 | tft:destroy   | _terraform apply -destroy_ for a unit\*                                                    |
 | tft:fmt       | _terraform fmt_ for a unit                                                                 |
-| tft:forget    | _terraform workspace delete_ for a variant\*                                               |
+| tft:forget    | _terraform workspace delete_ for a track\*                                                 |
 | tft:init      | _terraform init_ for a unit. An alias for `tft:init:s3`.                                   |
 | tft:new       | Add the source code for a new unit. Copies content from the _tf/units/template/_ directory |
 | tft:plan      | _terraform plan_ for a unit\*                                                              |
@@ -324,7 +324,7 @@ Set these variables to override the defaults:
 
 - `TFT_PRODUCT_NAME` - The name of the project
 - `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
-- `TFT_VARIANT` - See the section on [variants](#variants)
+- `TFT_TRACK` - See the section on [tracks](#tracks)
 - `TFT_REMOTE_BACKEND` - Set to _false_ to force the use of local TF state
 
 ### Updating TF Tasks
@@ -340,27 +340,27 @@ This synchronizes the files in your project that the template manages with the l
 
 > Copier only changes the files and directories that are managed by the template.
 
-### Using Variants
+### Using Tracks
 
-Use the variants feature to deploy extra copies of units for development and testing. Each variant of a unit uses the same configuration as other instances with the specified context.
+Use the tracks feature to deploy extra copies of units for development and testing. Each track of a unit uses the same configuration as other instances with the specified context.
 
-Specify `TFT_VARIANT` to create a variant:
+Specify `TFT_TRACK` to create a track:
 
 ```shell
-export TFT_CONTEXT=dev TFT_UNIT=my-app TFT_VARIANT=feature1
+export TFT_CONTEXT=dev TFT_UNIT=my-app TFT_TRACK=feature1
 task tft:plan
 task tft:apply
 ```
 
-The tooling automatically sets the value of the tfvar `variant` to match `TFT_VARIANT`. This ensures that every variant has a unique identifier that can be used in TF code.
+The tooling automatically sets the value of the tfvar `track` to match `TFT_TRACK`. This ensures that every track has a unique identifier that can be used in TF code.
 
-Only set `TFT_VARIANT` when you want to create an alternate version of a unit. If you do not specify a variant name, TF uses the default workspace for state, and the value of the tfvar `variant` is `default`.
+Only set `TFT_TRACK` when you want to create an alternate version of a unit. If you do not specify a track name, TF uses the default workspace for state, and the value of the tfvar `track` is `default`.
 
 ### Testing
 
 This tooling supports the [test](https://opentofu.org/docs/cli/commands/test/) features of TF. Each unit includes a minimum test configuration, so that you can run immediately run tests on the module as soon as it is created.
 
-A test creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of units do not conflict with other copies of the resources, the test in the unit template includes code to set the value of `variant` to a random string with the prefix `tt`.
+A test creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of units do not conflict with other copies of the resources, the test in the unit template includes code to set the value of `track` to a random string with the prefix `tt`.
 
 To validate a unit before any resources are deployed, use the `tft:validate` task:
 

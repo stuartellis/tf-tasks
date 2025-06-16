@@ -24,7 +24,7 @@
 #
 # TFT_PRODUCT_NAME   - Name of project
 # TFT_CLI_EXE        - The Terraform or OpenTofu executable to use
-# TFT_VARIANT        - Name of TF workspace
+# TFT_TRACK        - Name of TF workspace
 # TFT_REMOTE_BACKEND - Set TFT_REMOTE_BACKEND to "false" to force the use of local TF state:
 #
 # TFT_REMOTE_BACKEND=false
@@ -38,7 +38,7 @@ version: "3"
 vars:
   # Defaults
   DEFAULT_TFT_CLI_EXE: terraform
-  DEFAULT_TFT_VARIANT: default
+  DEFAULT_TFT_TRACK: default
   DEFAULT_TFT_PRODUCT_NAME:
     ref: "base .ROOT_DIR"
 
@@ -48,9 +48,9 @@ vars:
   # To use OpenTofu, specify: TFT_CLI_EXE=tofu
   CURRENT_TFT_CLI_EXE:
     ref: "default .DEFAULT_TFT_CLI_EXE .TFT_CLI_EXE"
-  # Override with TFT_VARIANT to specify the name of the TF workspace
-  CURRENT_TFT_VARIANT:
-    ref: "default .DEFAULT_TFT_VARIANT .TFT_VARIANT"
+  # Override with TFT_TRACK to specify the name of the TF workspace
+  CURRENT_TFT_TRACK:
+    ref: "default .DEFAULT_TFT_TRACK .TFT_TRACK"
   # Override with TFT_PRODUCT_NAME to specify the name of the product or project
   CURRENT_TFT_PRODUCT_NAME:
     ref: "default .DEFAULT_TFT_PRODUCT_NAME .TFT_PRODUCT_NAME"
@@ -85,7 +85,7 @@ vars:
     ref: "without .TFT_UNITS_LIST .TFT_TEMPLATE_NAME"
 
 env:
-  TF_WORKSPACE: "{{.CURRENT_TFT_VARIANT}}"
+  TF_WORKSPACE: "{{.CURRENT_TFT_TRACK}}"
 
 ## Tasks ##
 
@@ -101,7 +101,7 @@ tasks:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
-      TFT_CLI_PLAN_PATH: "{{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_UNIT}}-{{.TFT_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_TFT_VARIANT}}"
+      TFT_CLI_PLAN_PATH: "{{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_UNIT}}-{{.TFT_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_TFT_TRACK}}"
 
   check-fmt:
     desc: Check formatting of TF code for unit
@@ -131,26 +131,26 @@ tasks:
     cmds:
       - terraform {{.TFT_CLI_CHDIR_OPT}} console {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}
     requires:
-      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_VARIANT]
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_TRACK]
     vars:
       TFT_CONTEXT_DOCUMENT:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
-      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='unit_name={{.TFT_UNIT}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_TFT_VARIANT}}'"
+      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='unit_name={{.TFT_UNIT}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='track={{.CURRENT_TFT_TRACK}}'"
 
   destroy:
     desc: Destroy resources for TF unit
     cmds:
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_VARIANT]
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_TRACK]
     vars:
       TFT_CONTEXT_DOCUMENT:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
-      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='unit_name={{.TFT_UNIT}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_TFT_VARIANT}}'"
+      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='unit_name={{.TFT_UNIT}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='track={{.CURRENT_TFT_TRACK}}'"
 
   fmt:
     desc: Format code for TF unit
@@ -164,13 +164,13 @@ tasks:
       vars: [TFT_UNIT]
 
   forget:
-    desc: Delete a variant from TF remote backend
+    desc: Delete a track from TF remote backend
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} workspace delete {{.TFT_VARIANT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} workspace delete {{.TFT_TRACK}}"
     requires:
-      vars: [TFT_UNIT, TFT_VARIANT]
+      vars: [TFT_UNIT, TFT_TRACK]
     env:
-      TF_WORKSPACE: "{{.DEFAULT_TFT_VARIANT}}"
+      TF_WORKSPACE: "{{.DEFAULT_TFT_TRACK}}"
 
   new:
     desc: Create a new TF unit
@@ -190,14 +190,14 @@ tasks:
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} plan -out={{.TFT_CLI_PLAN_PATH}}.tfplan {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} show -json {{.TFT_CLI_PLAN_PATH}}.tfplan > {{.TFT_CLI_PLAN_PATH}}.json"
     requires:
-      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_VARIANT]
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_TRACK]
     vars:
       TFT_CONTEXT_DOCUMENT:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
-      TFT_CLI_PLAN_PATH: "{{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_UNIT}}-{{.TFT_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_TFT_VARIANT}}"
-      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='unit_name={{.TFT_UNIT}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_TFT_VARIANT}}'"
+      TFT_CLI_PLAN_PATH: "{{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_UNIT}}-{{.TFT_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_TFT_TRACK}}"
+      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='unit_name={{.TFT_UNIT}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='track={{.CURRENT_TFT_TRACK}}'"
 
   rm:
     desc: Remove code for TF unit
@@ -224,13 +224,13 @@ tasks:
     cmds:
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} test {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
     requires:
-      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_VARIANT]
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_TRACK]
     vars:
       TFT_CONTEXT_DOCUMENT:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
-      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='unit_name={{.TFT_UNIT}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='variant={{.CURRENT_TFT_VARIANT}}'"
+      TFT_CLI_VARS_OPT: "-var='product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='unit_name={{.TFT_UNIT}}' -var='environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='track={{.CURRENT_TFT_TRACK}}'"
 
   validate:
     desc: Validate TF unit

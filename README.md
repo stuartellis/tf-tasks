@@ -10,28 +10,28 @@ SPDX-License-Identifier: MIT
 
 This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) project.
 
-The tooling uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects. The tasks provide an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
+The tooling uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects. It provides an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
-- Multiple infrastructure components ([root modules](https://opentofu.org/docs/language/modules/)) in the same code repository, as separate [units](#units)
-- Multiple instances of the same component with different configurations with [contexts](#contexts)
-- Extra instances of a component for testing or development with [tracks](#tracks). Each track is a separate [workspace](https://opentofu.org/docs/language/state/workspaces/).
+- Multiple infrastructure components in the same code repository. Each [unit](#units) is a complete [root module](https://opentofu.org/docs/language/modules/).
+- Multiple instances of the same component with [different configurations](#contexts)
+- Disposable instances of a component for testing or development. Each [track](#tracks) uses a separate [workspace](https://opentofu.org/docs/language/state/workspaces/).
 - [Integration testing](#testing) for every component.
 - [Migrating from Terraform to OpenTofu](#using-opentofu). You use the same tasks for both.
 
-This tooling is also specifically designed so that you can use it alongside other tools, or stop using it at any time. The [root modules](#units) implement standard structures and code.
+This tooling is also specifically designed so that you can use it alongside other tools, or stop using it at any time. The [root modules](#units) implement standard structures and code. The only requirement is that the root modules accept four specific tfvars.
 
 > We use the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft` in the documentation and code.
 
 ## Table of Contents
 
-- [A Quick Example](#a-quick-example)
+- [Quick Examples](#quick-examples)
 - [How It Works](#how-it-works)
 - [Install](#install)
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
 
-## A Quick Example
+## Quick Examples
 
 To start a new project:
 
@@ -42,7 +42,7 @@ TFT_CONTEXT=dev task tft:context:new
 TFT_UNIT=my-app task tft:new
 ```
 
-The `tft:new` task creates a unit, a complete Terraform root module. This root module includes code for AWS, so that it will work immediately once the tfvar `tf_exec_role_arn` for the context is set to the AWS IAM role that TF will use. Enable remote state storage by adding the settings to the [context](#contexts), or use [local state](#using-local-tf-state).
+The `tft:new` task creates a unit, a complete Terraform root module. This root module includes code for AWS, so that it can work immediately. Enable remote state storage by adding the settings to the [context](#contexts), or use [local state](#using-local-tf-state). Set to the AWS IAM role for TF with the tfvar `tf_exec_role_arn`.
 
 You can then start working with your TF module:
 
@@ -56,10 +56,35 @@ task tft:plan
 task tft:apply
 ```
 
+You can also specifically set the unit and context for one task. This example runs the [integration tests](#testing) for the module:
+
 ```shell
-# Specifically set the unit and context for one task
 TFT_CONTEXT=dev TFT_UNIT=my-app task tft:test
 ```
+
+To create a disposable copy of the resources for a module, use the [tracks](#tracks) feature:
+
+```shell
+export TFT_CONTEXT=dev TFT_UNIT=my-app
+
+# Create a disposable copy of my-app
+TFT_TRACK=copy2 task tft:plan
+TFT_TRACK=copy2 task tft:apply
+
+# Destroy the extra copy of my-app
+TFT_TRACK=copy2 task tft:destroy
+
+# Clean-up: Delete the remote TF state for the copy of my-app
+TFT_TRACK=copy2 task tft:forget
+```
+
+To see a list of all of the available tasks in a project, enter _task_ in a terminal window:
+
+```shell
+task
+```
+
+If you have [autocompletion](https://taskfile.dev/installation/#setup-completions) for Task, this will show you commands as you type.
 
 ## How It Works
 
@@ -116,7 +141,9 @@ The tasks:
 
 ### Units
 
-You define each set of infrastructure code as a separate component. Each of the infrastructure components in the project is a separate TF root [module](https://opentofu.org/docs/language/modules/). This tooling refers to these TF root modules as _units_. Each TF unit is a subdirectory in the directory `tf/units/`.
+You define a set of infrastructure code as a component. Each of the infrastructure components in a project is a separate TF root [module](https://opentofu.org/docs/language/modules/), so that it can be created, tested, updated or destroyed independently of the others.
+
+This tooling refers to these TF root modules as _units_. Each TF unit is a subdirectory in the directory `tf/units/`.
 
 To create a new unit, use the `tft:new` task:
 
@@ -124,9 +151,9 @@ To create a new unit, use the `tft:new` task:
 TFT_UNIT=my-app task tft:new
 ```
 
-The tooling creates each new unit as a copy of the files in `tf/units/template/`. The template directory contains a complete, working TF module for AWS resources. This means that each new unit is immediately ready to use.
+The tooling creates each new unit as a copy of the files in `tf/units/template/`. The template directory contains a complete and working TF module for AWS resources. This means that each new unit is immediately ready to use. You are free to change units as you need. For example, you can completely remove the AWS resources from a unit, or use different versions of the same providers in separate units.
 
-You are free to change units as you need. For example, you can completely remove the AWS resources. The tooling only requires that a unit is a valid TF module with these tfvars:
+The tooling only requires that each unit is a valid TF module with these tfvars:
 
 - `environment_name` (string)
 - `product_name` (string)
@@ -139,7 +166,7 @@ To avoid compatibility issues, I recommend that you use names that only include 
 
 ### Contexts
 
-This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same unit with different configurations.
+This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same unit with different configurations, instead of needing to maintain separate sets of code for different instances.
 
 To create a new context, use the `tft:context:new` task:
 
@@ -184,9 +211,15 @@ To avoid issues, I recommend that you use context names that only include lowerc
 
 ### Tracks
 
-The tracks feature creates extra copies of units for development and testing. A track is a separate instance of a unit. Each track of a unit uses the same configuration as other instances with the specified context, but has a unique identifier. Every track is a TF [workspace](https://opentofu.org/docs/language/state/workspaces), so has separate state.
+The tracks feature creates extra copies of infrastructure for development and testing. A track is a separate instance of a unit. Each track of a unit uses the same configuration as other instances with the specified context, except for a unique identifier.
 
-> If you do not specify a named track, TF uses the default workspace for the unit.
+Every track is a separate TF [workspace](https://opentofu.org/docs/language/state/workspaces), so it has a separate state. The tracks feature uses TF workspaces in a standard way, and only adds a convention to ensure that every copy has a separate identifier. Use the `track` identifier in resource names to avoid conflicts between copies of a unit.
+
+This enables us to run multiple sets of infrastructure from the same TF module. Each set of infrastructure may use the same version of the module, or different versions of the TF module from different versions in source control. For example, use this feature to deploy copies of the infrastructure from different feature branches of the project.
+
+These alternate copies can be kept as long as is needed, and updated just like the main deployments from a module. Once a copy is no longer required, you can destroy it without affecting any of the other copies.
+
+> If you do not set a track, TF uses the default workspace for the unit.
 
 ### Managing Resource Names
 
@@ -215,17 +248,44 @@ By design, this tooling does not specify or enforce any dependencies between inf
 
 > This tooling does not explicitly support or conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). I do not currently test with the stacks feature. It is unclear when this feature will be finalised, or if an equivalent will be implemented by OpenTofu.
 
+### Working with TF Versions
+
+By design, this tooling uses the copy of Terraform or OpenTofu that you provide. It does not install or manage copies of Terraform and OpenTofu, and is not dependent on specific versions of these tools.
+
+You will need to use different versions of Terraform and OpenTofu for different projects. To handle this, use a tool version manager. The version manager will install the versions that you need and automatically switch between them as needed. Consider using [tenv](https://tofuutils.github.io/tenv/), which is a version manager that is specifically designed for TF tools. For projects that use multiple technologies, consider using [mise](https://mise.jdx.dev/), which can manage versions of many tools and programming languages.
+
+The generated projects include a `.terraform-version` file so that your tool version manager installs and use the Terraform version that you specify. To use OpenTofu, add an `.opentofu-version` file to enable your tool version manager to install and use the OpenTofu version that you specify.
+
+> This tooling can [switch between Terraform and OpenTofu](#using-opentofu). This is specifically to help you migrate projects from one of these tools to the other.
+
 ## Install
 
-You need [Git](https://git-scm.com/) and [Copier](https://copier.readthedocs.io/en/stable/) to add this template to a project. Use [uv](https://docs.astral.sh/uv/) or [pipx](https://pipx.pypa.io/) to run Copier. These tools enable you to use Copier without installing it.
+This project uses several command-line tools. We can install all of these tools on Linux or macOS with [Homebrew](https://brew.sh/):
 
-You can either create a new project with this template or add the template to an existing project. Use the same _copy_ sub-command of Copier for both cases. Run Copier with the _uvx_ or _pipx run_ commands, which download and cache software packages as needed. For example:
+- [Git](https://git-scm.com/) - `brew install git`
+- [Task](https://taskfile.dev) - `brew install go-task`
+- [pipx](https://pipx.pypa.io/) OR [uv](https://docs.astral.sh/uv/) - `brew install pipx` OR `brew install uv`
+
+The helpers [uv](https://docs.astral.sh/uv/) and [pipx](https://pipx.pypa.io/) enable us to run [Copier](https://copier.readthedocs.io/en/stable/) without installing it:
 
 ```shell
 uvx copier copy git+https://github.com/stuartellis/tf-tasks my-project
 ```
 
-I recommend that you use a tool version manager to install copies of Terraform and OpenTofu. Consider using either [tenv](https://tofuutils.github.io/tenv/), which is specifically designed for TF tools, or the general-purpose [mise](https://mise.jdx.dev/) framework. The generated projects include a `.terraform-version` file so that your tool version manager can immediately install and use the Terraform version that you specify.
+```shell
+pipx run copier copy git+https://github.com/stuartellis/tf-tasks my-project
+```
+
+You can provide Terraform or OpenTofu any way that you wish. I recommend that you use [tenv](https://tofuutils.github.io/tenv/). The `tenv` tool automatically installs and uses the required version of Terraform or OpenTofu for the project. If _cosign_ is present, _tenv_ automatically uses it to carry out signature verification on the binaries that it downloads.
+
+```shell
+# Install tenv with cosign
+brew install tenv cosign
+```
+
+The tasks do not use Python or Copier. They only need a UNIX shell, Git, Task and Terraform or OpenTofu. This means that they can be run in a restricted environment, such as a continuous integration job. We can use tenv to install Terraform or OpenTofu in any environment.
+
+> Task includes support for [shell completions](https://taskfile.dev/installation/#setup-completions) in bash, zsh, fish and PowerShell.
 
 ## Usage
 
@@ -273,16 +333,6 @@ task tft:apply
 
 > You will see a warning when you run `init` with a current version of Terraform. This is because Hashicorp are [deprecating the use of DynamoDB with S3 remote state](https://developer.hashicorp.com/terraform/language/backend/s3#state-locking). To support older versions of Terraform, this tooling will continue to use DynamoDB for a period of time.
 
-### Working with TF Versions
-
-By design, this tooling uses the copy of Terraform or OpenTofu that you provide. It does not install or manage copies of Terraform and OpenTofu, and is not dependent on specific versions of these tools.
-
-You will need to use different versions of Terraform and OpenTofu for different projects. To handle this, use a tool version manager. The version manager will install the versions that you need and automatically switch between them as needed. Consider using [tenv](https://tofuutils.github.io/tenv/), which is a version manager that is specifically designed for TF tools. For projects that use multiple technologies, consider using [mise](https://mise.jdx.dev/), which can manage versions of many tools and programming languages.
-
-The generated projects include a `.terraform-version` file so that your tool version manager installs and use the Terraform version that you specify. To use OpenTofu, add an `.opentofu-version` file to enable your tool version manager to install and use the OpenTofu version that you specify.
-
-> This tooling can [switch between Terraform and OpenTofu](#using-opentofu). This is specifically to help you migrate projects from one of these tools to the other.
-
 ### The `tft` Tasks
 
 | Name          | Description                                                                                |
@@ -299,6 +349,7 @@ The generated projects include a `.terraform-version` file so that your tool ver
 | tft:plan      | _terraform plan_ for a unit\*                                                              |
 | tft:rm        | Delete the source code for a unit                                                          |
 | tft:test      | _terraform test_ for a unit\*                                                              |
+| tft:units     | List the units.                                                                            |
 | tft:validate  | _terraform validate_ for a unit\*                                                          |
 
 \*: These tasks require that you first [initialise](https://opentofu.org/docs/cli/commands/init/) the unit.
@@ -307,6 +358,7 @@ The generated projects include a `.terraform-version` file so that your tool ver
 
 | Name             | Description                                                                  |
 | ---------------- | ---------------------------------------------------------------------------- |
+| tft:context      | An alias for `tft:context:list`.                                             |
 | tft:context:list | List the contexts                                                            |
 | tft:context:new  | Add a new context. Copies content from the _tf/contexts/template/_ directory |
 | tft:context:rm   | Delete the directory for a context                                           |
@@ -315,6 +367,7 @@ The generated projects include a `.terraform-version` file so that your tool ver
 
 | Name           | Description                                               |
 | -------------- | --------------------------------------------------------- |
+| tft:init       | _terraform init_ for a unit. An alias for `tft:init:s3`.  |
 | tft:init:local | _terraform init_ for a unit, with local state.            |
 | tft:init:s3    | _terraform init_ for a unit, with Amazon S3 remote state. |
 
@@ -342,9 +395,9 @@ This synchronizes the files in your project that the template manages with the l
 
 ### Using Tracks
 
-Use the tracks feature to deploy extra copies of units for development and testing. Each track of a unit uses the same configuration as other instances with the specified context.
+Use the [tracks](#tracks) feature to deploy extra copies of units for development and testing.
 
-Specify `TFT_TRACK` to create a track:
+Specify `TFT_TRACK` to create a new track for the unit:
 
 ```shell
 export TFT_CONTEXT=dev TFT_UNIT=my-app TFT_TRACK=feature1
@@ -352,9 +405,17 @@ task tft:plan
 task tft:apply
 ```
 
-The tooling automatically sets the value of the tfvar `track` to match `TFT_TRACK`. This ensures that every track has a unique identifier that can be used in TF code.
+Each track of a unit has an identical configuration as other instances that use the specified context, apart from the tfvar `track`. The tooling automatically sets the value of the tfvar `track` to match `TFT_TRACK`. This ensures that every track has a unique identifier that can be used in TF code.
 
 Only set `TFT_TRACK` when you want to create an alternate version of a unit. If you do not specify a track name, TF uses the default workspace for state, and the value of the tfvar `track` is `default`.
+
+Once you no longer need a track, run `tft:destroy` to delete the resources, and then run `tft:forget` to delete the TF remote state for the track:
+
+```shell
+export TFT_CONTEXT=dev TFT_UNIT=my-app TFT_TRACK=copy2
+task tft:destroy
+task tft:forget
+```
 
 ### Testing
 
@@ -398,7 +459,11 @@ By default, this tooling uses the copy of Terraform that is found on your `PATH`
 TFT_CLI_EXE=tofu
 ```
 
-To specify which version of OpenTofu to use, create a `.opentofu-version` file. This file should contain the version of OpenTofu and nothing else, e.g. `1.9.1`.
+To specify which version of OpenTofu to use, create a `.opentofu-version` file. This file should contain the version of OpenTofu and nothing else, like this:
+
+```shell
+1.9.1
+```
 
 > Remember that if you switch between Terraform and OpenTofu, you will need to initialise your unit again, and when you run `apply` it will migrate the TF state. The OpenTofu Website provides [migration guides](https://opentofu.org/docs/intro/migration/), which includes information about code changes that you may need to make.
 

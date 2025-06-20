@@ -21,7 +21,7 @@ resource "random_string" "edition_suffix" {
   upper   = false
 }
 
-output "random_edition_name" {
+output "random_tft_edition_name" {
   value       = "tt${random_string.edition_suffix.result}"
-  description = "A random edition name."
+  description = "TFT: A random edition name."
 }

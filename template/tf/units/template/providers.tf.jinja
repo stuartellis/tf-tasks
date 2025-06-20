@@ -14,8 +14,8 @@ provider "aws" {
       Environment = var.environment_name
       Product     = var.product_name
       Provisioner = "Terraform"
+      TfEdition   = var.edition
       TfUnit      = var.unit_name
-      Track       = var.track
     }
   }
 }

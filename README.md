@@ -8,19 +8,17 @@ SPDX-License-Identifier: MIT
 
 [![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-grayscale-inverted-border-orange.json)](https://github.com/copier-org/copier) [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) project.
+This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) in a [monorepo](https://en.wikipedia.org/wiki/Monorepo).
 
 The tooling uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects. It provides an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
 - Multiple infrastructure components in the same code repository. Each [unit](#units) is a complete [root module](https://opentofu.org/docs/language/modules/).
 - Multiple instances of the same component with [different configurations](#contexts)
-- Disposable instances of a component for testing or development. Each [track](#tracks) uses a separate [workspace](https://opentofu.org/docs/language/state/workspaces/).
+- [Disposable instances](#extra-instances) of a component for development and testing. Use this to create instances for the branches of your code as you need them.
 - [Integration testing](#testing) for every component.
 - [Migrating from Terraform to OpenTofu](#using-opentofu). You use the same tasks for both.
 
-This tooling is also specifically designed so that you can use it alongside other tools, or stop using it at any time. The [root modules](#units) implement standard structures and code. The only requirement is that the root modules accept four specific tfvars.
-
-> We use the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft` in the documentation and code.
+> This uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft` in the documentation and code.
 
 ## Table of Contents
 
@@ -36,7 +34,7 @@ This tooling is also specifically designed so that you can use it alongside othe
 To start a new project:
 
 ```shell
-copier copy git+https://github.com/stuartellis/tf-tasks my-project
+uvx copier copy git+https://github.com/stuartellis/tf-tasks my-project
 cd my-project
 TFT_CONTEXT=dev task tft:context:new
 TFT_UNIT=my-app task tft:new
@@ -62,20 +60,20 @@ You can also specifically set the unit and context for one task. This example ru
 TFT_CONTEXT=dev TFT_UNIT=my-app task tft:test
 ```
 
-To create a disposable copy of the resources for a module, use the [tracks](#tracks) feature:
+To create a disposable copy of the resources for a module, just set an identifier for the extra copy:
 
 ```shell
 export TFT_CONTEXT=dev TFT_UNIT=my-app
 
 # Create a disposable copy of my-app
-TFT_TRACK=copy2 task tft:plan
-TFT_TRACK=copy2 task tft:apply
+TFT_EDITION=copy2 task tft:plan
+TFT_EDITION=copy2 task tft:apply
 
 # Destroy the extra copy of my-app
-TFT_TRACK=copy2 task tft:destroy
+TFT_EDITION=copy2 task tft:destroy
 
-# Clean-up: Delete the remote TF state for the copy of my-app
-TFT_TRACK=copy2 task tft:forget
+# Clean-up: Delete the remote TF state for the extra copy of my-app
+TFT_EDITION=copy2 task tft:forget
 ```
 
 To see a list of all of the available tasks in a project, enter _task_ in a terminal window:
@@ -84,11 +82,11 @@ To see a list of all of the available tasks in a project, enter _task_ in a term
 task
 ```
 
-If you have [autocompletion](https://taskfile.dev/installation/#setup-completions) for Task, this will show you commands as you type.
+If you have autocompletion for Task, this will show you commands as you type.
 
 ## How It Works
 
-First, you use [Copier](https://copier.readthedocs.io/en/stable/) to either generate a new project, or to add this tooling to an existing project.
+First, you run [Copier](https://copier.readthedocs.io/en/stable/) to either generate a new project, or to add this tooling to an existing project.
 
 The tooling uses specific files and directories:
 
@@ -151,22 +149,22 @@ To create a new unit, use the `tft:new` task:
 TFT_UNIT=my-app task tft:new
 ```
 
-The tooling creates each new unit as a copy of the files in `tf/units/template/`. The template directory contains a complete and working TF module for AWS resources. This means that each new unit is immediately ready to use. You are free to change units as you need. For example, you can completely remove the AWS resources from a unit, or use different versions of the same providers in separate units.
+The tooling creates each new unit as a copy of the files in `tf/units/template/`. The template directory contains a complete and working TF module for AWS resources. This means that each new unit is immediately ready to use. You are free to change units as you need. For example, you can completely remove the AWS resources from a unit, or have different versions of the same providers in separate units.
 
 The tooling only requires that each unit is a valid TF module with these tfvars:
 
 - `environment_name` (string)
 - `product_name` (string)
 - `unit_name` (string)
-- `track` (string)
+- `edition` (string)
 
-To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and track names that are longer than 7 characters, and unit names that are longer than 12 characters.
+To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and edition names that are longer than 7 characters, and unit names that are longer than 12 characters.
 
 > If you amend a module to not use AWS, ensure that you change the tests.
 
 ### Contexts
 
-This tooling uses _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same unit with different configurations, instead of needing to maintain separate sets of code for different instances.
+This tooling has _contexts_ to provide profiles for TF. Contexts enable you to deploy multiple instances of the same unit with different configurations, instead of needing to maintain separate sets of code for different instances.
 
 To create a new context, use the `tft:context:new` task:
 
@@ -178,10 +176,10 @@ Each context is a subdirectory in the directory `tf/contexts/` that contains a `
 
 The `context.json` file is the configuration file for the context. It specifies metadata and settings for TF [remote state](https://opentofu.org/docs/language/state/remote/). Each `context.json` file specifies two items of metadata:
 
-- `environment`
 - `description`
+- `environment`
 
-The `environment` is a string that is automatically provided to TF as the tfvar `environment_name`. There are no limitations on how your code uses this tfvar. The `description` is deliberately not used by this tooling, so that you may use it however you wish.
+The `description` is deliberately not used by the tooling, so that you can leave it empty, or do whatever you wish with it. The `environment` is a string that is automatically provided to TF as the tfvar `environment_name`. There are no limitations on how your code uses this tfvar.
 
 Here is an example of a `context.json` file:
 
@@ -203,40 +201,46 @@ Here is an example of a `context.json` file:
 
 To enable you to share common tfvars across all of the contexts for a unit, the directory `tf/contexts/all/` contains one `.tfvars` file for each unit. The `.tfvars` file for a unit in the `all` directory is always used, along with `.tfvars` for the current context.
 
-The tooling creates each new context as a copy of files in `tf/contexts/template/`. It uses `standard.tfvars` to create the tfvars files that are created for new units.
+The tooling creates each new context as a copy of files in `tf/contexts/template/`. It copies the `standard.tfvars` file to create the tfvars files that are created for new units.
 
 To avoid issues, I recommend that you use context names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining context names that are longer than 12 characters.
 
 > Contexts exist to configure TF. To avoid coupling live resources directly to individual contexts, the tooling does not pass the name of the active context to the TF code, only the `environment` name that it specifies.
 
-### Tracks
+### Extra Instances
 
-The tracks feature creates extra copies of infrastructure for development and testing. Each track has an identical configuration as the other instances of the unit that use the same context, apart from the tfvar `track`. The tooling automatically sets the value of the tfvar `track` to match the variable `TFT_TRACK`.
+TF has two different ways to create extra copies of the same infrastructure from a root module: the [test](https://opentofu.org/docs/cli/commands/test/) feature and [workspaces](https://opentofu.org/docs/language/state/workspaces/).
 
-This ensures that every track has a unique identifier that can be used in the TF code. Use the `track` identifier in the resource names to avoid conflicts between the copies of a unit. The template TF code includes locals that you can use to create unique resource names.
+The test feature destroys the resources at the end of each test run. The state information about the resources is only held in the memory of the system. This means that it is not stored and no existing state data is updated.
 
-A track is a TF [workspace](https://opentofu.org/docs/language/state/workspaces). This means that each track has a separate state from every other copy of the infrastructure for that unit. The tracks feature uses TF workspaces in a standard way: a track is just a workspace which is guaranteed to know its own name.
+Workspaces means that TF creates a new, separate state for the extra copy, so that you can maintain and update an extra copy for as long as you need it. We often use workspaces to deploy separate copies of infrastructure for development and testing, with different copies from features branches of the same code.
 
-This combination of a unique identifier and a separate TF workspace enables us to run multiple sets of infrastructure from the same TF module. Each set of infrastructure may use the same version of the module, or different versions of the TF module from different versions in source control. For example, use this feature to deploy copies of the infrastructure from different feature branches of the project.
+However, if you try to create multiple instances of the same infrastructure from the same root module with the same configuration then it will probably fail. TF will try to create new resources that use exactly the same attributes as the resources for the first copy. The provider will then receive requests from TF to create resources that have the same names as existing resources, and it is likely to handle the problem by refusing to create these new resources.
 
-These alternate copies can be kept as long as is needed, and updated just like the main deployments from a module. Once a copy is no longer required, you can destroy it without affecting any of the other copies.
+This tooling implements both TF test and workspaces features with a consistent means of ensuring that every copy of infrastructure can have unique names. It simply defines that every module has a tfvar called `edition`.
 
-> If you do not set a track, TF uses the default workspace for the unit.
+This ensures that every instance has an identifier that you can use in your TF code. You include the `edition` identifier in resource names to avoid conflicts between copies. For convenience, the template TF code provides locals that you can use to create unique resource names. The [next section](#managing-resource-names) has more details about resource names.
+
+For workspaces, the tooling automatically sets the value of the tfvar `edition` to match the variable `TFT_EDITION`. Set this variable in any way that you want. For example, you can configure your CI system to set the variable to match branch names. If you do not specify a edition identifier, TF uses the default workspace for state, and the value of the tfvar `edition` is `default`.
+
+For tests, we should use a unique identifier per test run. The test in the unit template includes code to set the value of `edition` to a random string with the prefix `tt`, so that every test copy of infrastructure will have a unique value for the `edition` tfvar.
+
+If you follow this example in your own test code and have used the tfvar `edition` in resource names then you can run tests and create multiple extra instances of infrastructure in parallel without issues.
 
 ### Managing Resource Names
 
-Use the `environment`, `unit_name` and `track` tfvars in your TF code to define resource names that are unique for each instance of the resource. This avoids conflicts.
+Use the `environment`, `unit_name` and `edition` tfvars in your TF code to define resource names that are both meaningful to humans and unique for each instance of the resource. This avoids conflicts between copies of infrastructure.
 
 For convenience, the code in the unit template includes locals and outputs to help with this:
 
 - `tft_handle` - Normalizes the `unit_name` to the first 12 characters, in lowercase
-- `tft_standard_prefix` - Combines `environment`, `track` and `tft_handle`, separated by hyphens
+- `tft_standard_prefix` - Combines `environment`, `edition` and `tft_handle`, separated by hyphens
 
-To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and track names that are longer than 7 characters, and unit names that are longer than 12 characters.
+To avoid compatibility issues, I recommend that you use names that only include lowercase letters, numbers and hyphen characters, with the first character being a lowercase letter. Avoid defining environment and edition names that are longer than 7 characters, and unit names that are longer than 12 characters.
 
 To ensure that the template code is compatible with older versions of Terraform, it currently does not use validations on the tfvars.
 
-> The test in the unit template includes code to set the value of `track` to a random string with the prefix `tt`. If you use the `track` in resource names, this ensures that test copies of resources do not conflict with existing resources that were deployed with the same TF module.
+> The test in the unit template includes code to set the value of the tfvar `edition` to a random string with the prefix `tt`. If you use the `edition` in resource names, this ensures that test copies of resources do not conflict with existing resources that were deployed with the same TF module.
 
 ### Shared Modules
 
@@ -252,7 +256,7 @@ By design, this tooling does not specify or enforce any dependencies between inf
 
 ### Working with TF Versions
 
-By design, this tooling uses the copy of Terraform or OpenTofu that you provide. It does not install or manage copies of Terraform and OpenTofu, and is not dependent on specific versions of these tools.
+By design, this tooling uses the copy of Terraform or OpenTofu that you provide. It does not install or manage copies of Terraform and OpenTofu, and it is not dependent on specific versions of these tools.
 
 You will need to use different versions of Terraform and OpenTofu for different projects. To handle this, use a tool version manager. The version manager will install the versions that you need and automatically switch between them as needed. Consider using [tenv](https://tofuutils.github.io/tenv/), which is a version manager that is specifically designed for TF tools. For projects that use multiple technologies, consider using [mise](https://mise.jdx.dev/), which can manage versions of many tools and programming languages.
 
@@ -268,37 +272,37 @@ This project uses several command-line tools. We can install all of these tools 
 - [Task](https://taskfile.dev) - `brew install go-task`
 - [pipx](https://pipx.pypa.io/) OR [uv](https://docs.astral.sh/uv/) - `brew install pipx` OR `brew install uv`
 
-The helpers [uv](https://docs.astral.sh/uv/) and [pipx](https://pipx.pypa.io/) enable us to run [Copier](https://copier.readthedocs.io/en/stable/) without installing it:
+> Set up [shell completions](https://taskfile.dev/installation/#setup-completions) for Task after you install it. Task supports bash, zsh, fish and PowerShell.
 
-```shell
-uvx copier copy git+https://github.com/stuartellis/tf-tasks my-project
-```
+The helpers [pipx](https://pipx.pypa.io/) and [uv](https://docs.astral.sh/uv/) enable us to run [Copier](https://copier.readthedocs.io/en/stable/) without installing it:
 
 ```shell
 pipx run copier copy git+https://github.com/stuartellis/tf-tasks my-project
 ```
 
-You can provide Terraform or OpenTofu any way that you wish. I recommend that you use [tenv](https://tofuutils.github.io/tenv/). The `tenv` tool automatically installs and uses the required version of Terraform or OpenTofu for the project. If _cosign_ is present, _tenv_ automatically uses it to carry out signature verification on the binaries that it downloads.
+```shell
+uvx copier copy git+https://github.com/stuartellis/tf-tasks my-project
+```
+
+You can install Terraform or OpenTofu any way that you wish. I recommend that you use [tenv](https://tofuutils.github.io/tenv/). The `tenv` tool automatically installs and uses the required version of Terraform or OpenTofu for the project. If _cosign_ is present, _tenv_ uses it to carry out signature verification on OpenTofu binaries.
 
 ```shell
 # Install tenv with cosign
 brew install tenv cosign
 ```
 
-The tasks do not use Python or Copier. They only need a UNIX shell, Git, Task and Terraform or OpenTofu. This means that they can be run in a restricted environment, such as a continuous integration job. We can use tenv to install Terraform or OpenTofu in any environment.
-
-> Task includes support for [shell completions](https://taskfile.dev/installation/#setup-completions) in bash, zsh, fish and PowerShell.
+The tasks do not use Python or Copier. They only need a UNIX shell, Git, Task and Terraform or OpenTofu. This means that they can be run in a restricted environment, such as a continuous integration job. We can [add tenv to any environment](https://tofuutils.github.io/tenv/#installation) and then use it to install Terraform or OpenTofu.
 
 ## Usage
 
-To use the tasks in a generated project you need:
+To use the tasks in a generated project you always need:
 
 - A UNIX shell, such as Bash or Fish
 - [Git](https://git-scm.com/)
 - [Task](https://taskfile.dev)
 - [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/)
 
-> The TF tasks in the template do not use Python or Copier. This enables you to run these tasks in environments where Python is not installed.
+The TF tasks in the template do not use Python or Copier. This means that they can be run in a restricted environment, such as a continuous integration job.
 
 To see a list of the available tasks in a project, enter _task_ in a terminal window:
 
@@ -345,7 +349,7 @@ task tft:apply
 | tft:console   | _terraform console_ for a unit\*                                                           |
 | tft:destroy   | _terraform apply -destroy_ for a unit\*                                                    |
 | tft:fmt       | _terraform fmt_ for a unit                                                                 |
-| tft:forget    | _terraform workspace delete_ for a track\*                                                 |
+| tft:forget    | _terraform workspace delete_\*                                                             |
 | tft:init      | _terraform init_ for a unit. An alias for `tft:init:s3`.                                   |
 | tft:new       | Add the source code for a new unit. Copies content from the _tf/units/template/_ directory |
 | tft:plan      | _terraform plan_ for a unit\*                                                              |
@@ -379,8 +383,8 @@ Set these variables to override the defaults:
 
 - `TFT_PRODUCT_NAME` - The name of the project
 - `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
-- `TFT_TRACK` - See the section on [tracks](#tracks)
 - `TFT_REMOTE_BACKEND` - Set to _false_ to force the use of local TF state
+- `TFT_EDITION` - See the section on [extra instances](#extra-instances)
 
 ### Updating TF Tasks
 
@@ -395,48 +399,44 @@ This synchronizes the files in your project that the template manages with the l
 
 > Copier only changes the files and directories that are managed by the template.
 
-### Using Tracks
+### Using Extra Instances
 
-Use the [tracks](#tracks) feature to deploy extra copies of units for development and testing.
-
-Specify `TFT_TRACK` to create a new track for the unit:
+Specify `TFT_EDITION` to create an [extra instance](#extra-instances) of a unit:
 
 ```shell
-export TFT_CONTEXT=dev TFT_UNIT=my-app TFT_TRACK=feature1
+export TFT_CONTEXT=dev TFT_UNIT=my-app TFT_EDITION=feature1
 task tft:plan
 task tft:apply
 ```
 
-Each track of a unit has an identical configuration as other instances that use the specified context, apart from the tfvar `track`. The tooling automatically sets the value of the tfvar `track` to match `TFT_TRACK`. This ensures that every track has a unique identifier that can be used in TF code.
+Each instance of a unit has an identical configuration as other instances that use the specified context, apart from the tfvar `edition`. The tooling automatically sets the value of the tfvar `edition` to match `TFT_EDITION`. This ensures that every edition has a unique identifier that can be used in TF code.
 
-Only set `TFT_TRACK` when you want to create an alternate version of a unit. If you do not specify a track name, TF uses the default workspace for state, and the value of the tfvar `track` is `default`.
+Only set `TFT_EDITION` when you want to create an extra copy of a unit. If you do not specify a edition identifier, TF uses the default workspace for state, and the value of the tfvar `edition` is `default`.
 
-Once you no longer need a track, run `tft:destroy` to delete the resources, and then run `tft:forget` to delete the TF remote state for the track:
+Once you no longer need the extra instance, run `tft:destroy` to delete the resources, and then run `tft:forget` to delete the TF remote state for the extra instance:
 
 ```shell
-export TFT_CONTEXT=dev TFT_UNIT=my-app TFT_TRACK=copy2
+export TFT_CONTEXT=dev TFT_UNIT=my-app TFT_EDITION=copy2
 task tft:destroy
 task tft:forget
 ```
 
 ### Testing
 
-This tooling supports the [test](https://opentofu.org/docs/cli/commands/test/) features of TF. Each unit includes a minimum test configuration, so that you can run immediately run tests on the module as soon as it is created.
+This tooling supports the [validate](https://opentofu.org/docs/cli/commands/validate/) and [test](https://opentofu.org/docs/cli/commands/test/) features of TF. Each unit includes a minimum test configuration, so that you can run immediately run tests on the module as soon as it is created.
 
-A test creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of units do not conflict with other copies of the resources, the test in the unit template includes code to set the value of `track` to a random string with the prefix `tt`.
+A test creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of units do not conflict with other copies of the resources, the test in the unit template includes code to set the value of `edition` to a random string with the prefix `tt`.
 
 To validate a unit before any resources are deployed, use the `tft:validate` task:
 
 ```shell
-export TFT_CONTEXT=dev TFT_UNIT=my-app
-task tft:validate
+TFT_UNIT=my-app task tft:validate
 ```
 
 To run tests on a unit, use the `tft:test` task:
 
 ```shell
-export TFT_CONTEXT=dev TFT_UNIT=my-app
-task tft:test
+TFT_CONTEXT=dev TFT_UNIT=my-app task tft:test
 ```
 
 The tests create and destroy temporary copies of resources on the cloud services that being managed. Check the expected behaviour of the resources, because cloud services may not immediately remove some types of resources.
@@ -455,7 +455,7 @@ To use local state, you will also need to comment out the `backend "s3" {}` bloc
 
 ### Using OpenTofu
 
-By default, this tooling uses the copy of Terraform that is found on your `PATH`. Set `TFT_CLI_EXE` as an environment variable to specify the path to the tool that you wish to use. For example, to use OpenTofu, set `TFT_CLI_EXE` with the value `tofu`:
+By default, this tooling uses the copy of Terraform that is found on your `PATH`. Set `TFT_CLI_EXE` as an environment variable to specify the path to the tool that you wish to use. For example, to use [OpenTofu](https://opentofu.org/), set `TFT_CLI_EXE` with the value `tofu`:
 
 ```shell
 TFT_CLI_EXE=tofu
@@ -471,7 +471,7 @@ To specify which version of OpenTofu to use, create a `.opentofu-version` file. 
 
 ## Contributing
 
-This project was built for my personal use. I will consider suggestions and Pull Requests, but I may decline anything that makes it less useful for my needs. You are welcome to fork this project.
+This tooling was built for my personal use. I will consider suggestions and Pull Requests, but I may decline anything that makes it less useful for my needs. You are welcome to fork [the project](https://github.com/stuartellis/tf-tasks).
 
 Some of the configuration files for this project template are provided by my [project baseline Copier template](https://github.com/stuartellis/copier-sve-baseline). To synchronize a copy of this project template with the baseline template, run these commands:
 

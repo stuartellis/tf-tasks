@@ -333,6 +333,6 @@ tasks:
         -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backend_s3.region}}\"
         -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
         -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
-        -backend-config=\"key=tft/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
+        -backend-config=\"key=components/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
       TFT_CLI_BACKEND_OPT:
         sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{else}}{{.TFT_CLI_BACKEND_S3DDB_OPT}}{{end}}

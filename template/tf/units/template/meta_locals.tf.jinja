@@ -2,23 +2,32 @@
 #
 # SPDX-License-Identifier: MIT
 #
+# Locals for resource identifiers
+#
+# Use these locals to build resource names, tags and labels.
+# They use input variables that are defined in tft_variables.tf
+#
+# WARNING: TF will create a new resource when you change any local that affects the resource name.
 
 locals {
+
+  # Use these in tags and labels
+  meta_component_name       = lower(var.tft_unit_name)
   meta_edition              = lower(var.tft_edition)
   meta_environment_name     = lower(var.tft_environment_name)
   meta_product_name         = lower(var.tft_product_name)
-  meta_unit_name            = lower(var.tft_unit_name)
-  meta_instance_sha256_hash = sha256("${local.meta_product_name}-${local.meta_environment_name}-${local.meta_unit_name}-${local.meta_edition}")
-  meta_short_hash           = substr(local.meta_instance_sha256_hash, 0, 8)
-  universal_prefix          = "${local.meta_product_name}-${local.meta_short_hash}"
+  meta_instance_sha256_hash = sha256("${local.meta_product_name}-${local.meta_environment_name}-${local.meta_component_name}-${local.meta_edition}")
+
+  # Use this in resource names
+  handle = substr(local.meta_instance_sha256_hash, 0, 8)
 }
 
 output "meta_instance_sha256_hash" {
   value       = local.meta_instance_sha256_hash
-  description = "Meta: The full SHA256 hash for this instance of the TF root module."
+  description = "Meta: The SHA256 hash that identifies this instance of the TF root module."
 }
 
-output "meta_instance_short_hash" {
-  value       = local.meta_short_hash
-  description = "Meta: A unique identifier for this instance of the TF root module."
+output "meta_instance_handle" {
+  value       = local.handle
+  description = "Meta: An identifier for resources managed by this instance of the TF root module."
 }

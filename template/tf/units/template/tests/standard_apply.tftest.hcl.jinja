@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 #
+# Default integration test
+#
+# This depends on the AWS Parameter Store parameter for instance hash.
+# If you do not use AWS, change the tests so that they do not rely on this parameter.
 
 run "setup" {
   command = apply

@@ -5,6 +5,10 @@
 # Required tfvars for tft:
 #
 # https://github.com/stuartellis/tf-tasks
+#
+# Use locals to define resource names, tags and labels.
+# Only use these tft variables in locals. Never use them directly in code.
+# See meta_locals.tf for standard locals to use in resource names.
 
 variable "tft_environment_name" {
   type        = string

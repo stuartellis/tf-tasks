@@ -221,19 +221,6 @@ tasks:
     requires:
       vars: [TFT_UNIT]
 
-  sha256:
-    desc: SHA256 hash for the instance of the TF unit
-    cmds:
-      - echo "{{.TFT_SHA256}}"
-    requires:
-      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
-    vars:
-      TFT_INSTANCE_ID: "${.CURRENT_TFT_PRODUCT_NAME}-${.TFT_UNIT}-${.TFT_CONTEXT}-${.TFT_UNIT}-${.CURRENT_TFT_EDITION}"
-      TFT_LOWERCASE_INSTANCE_ID:
-        ref: "lower .TFT_INSTANCE_ID"
-      TFT_SHA256:
-        ref: "sha256sum .TFT_LOWERCASE_INSTANCE_ID"
-
   test:
     desc: Run TF test for unit
     cmds:
@@ -253,6 +240,36 @@ tasks:
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} validate"
     requires:
       vars: [TFT_UNIT]
+
+  ## Tasks for identifiers ##
+
+  id:handle:
+    desc: Handle for the instance of the TF unit
+    cmds:
+      - echo "{{.TFT_HANDLE}}"
+    requires:
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
+    vars:
+      TFT_INSTANCE_ID: "${.CURRENT_TFT_PRODUCT_NAME}-${.TFT_CONTEXT}-${.TFT_UNIT}-${.CURRENT_TFT_EDITION}"
+      TFT_LOWERCASE_INSTANCE_ID:
+        ref: "lower .TFT_INSTANCE_ID"
+      TFT_SHA256:
+        ref: "sha256sum .TFT_LOWERCASE_INSTANCE_ID"
+      TFT_HANDLE:
+        ref: "substr 0 8 .TFT_SHA256"
+
+  id:sha256:
+    desc: SHA256 hash for the instance of the TF unit
+    cmds:
+      - echo "{{.TFT_SHA256}}"
+    requires:
+      vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
+    vars:
+      TFT_INSTANCE_ID: "${.CURRENT_TFT_PRODUCT_NAME}-${.TFT_CONTEXT}-${.TFT_UNIT}-${.CURRENT_TFT_EDITION}"
+      TFT_LOWERCASE_INSTANCE_ID:
+        ref: "lower .TFT_INSTANCE_ID"
+      TFT_SHA256:
+        ref: "sha256sum .TFT_LOWERCASE_INSTANCE_ID"
 
   ## Context tasks ##
 

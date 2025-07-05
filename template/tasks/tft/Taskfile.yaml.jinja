@@ -165,7 +165,7 @@ tasks:
       vars: [TFT_UNIT]
 
   forget:
-    desc: Delete a edition from TF remote backend
+    desc: Delete a workspace from the current TF remote backend
     cmds:
       - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} workspace delete {{.TFT_EDITION}}"
     requires:
@@ -245,12 +245,13 @@ tasks:
 
   id:handle:
     desc: Handle for the instance of the TF unit
+    silent: true
     cmds:
       - echo "{{.TFT_HANDLE}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
-      TFT_INSTANCE_ID: "${.CURRENT_TFT_PRODUCT_NAME}-${.TFT_CONTEXT}-${.TFT_UNIT}-${.CURRENT_TFT_EDITION}"
+      TFT_INSTANCE_ID: "{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_CONTEXT}}-{{.TFT_UNIT}}-{{.CURRENT_TFT_EDITION}}"
       TFT_LOWERCASE_INSTANCE_ID:
         ref: "lower .TFT_INSTANCE_ID"
       TFT_SHA256:
@@ -260,12 +261,15 @@ tasks:
 
   id:sha256:
     desc: SHA256 hash for the instance of the TF unit
+    aliases:
+      - id
+    silent: true
     cmds:
       - echo "{{.TFT_SHA256}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
-      TFT_INSTANCE_ID: "${.CURRENT_TFT_PRODUCT_NAME}-${.TFT_CONTEXT}-${.TFT_UNIT}-${.CURRENT_TFT_EDITION}"
+      TFT_INSTANCE_ID: "{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_CONTEXT}}-{{.TFT_UNIT}}-{{.CURRENT_TFT_EDITION}}"
       TFT_LOWERCASE_INSTANCE_ID:
         ref: "lower .TFT_INSTANCE_ID"
       TFT_SHA256:
@@ -291,7 +295,7 @@ tasks:
           var: TFT_FILTERED_UNITS
         cmd: cp "{{.TFT_CONTEXTS_DIR}}/template/standard.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/{{.ITEM}}.tfvars"
       - cp "{{.TFT_CONTEXTS_DIR}}/template/context.json" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}"
-      - sed -i 's/\"environment\"\:\"\" /\"environment\"\:\"{{.TFT_CONTEXT}}\"/g' "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json"
+      - sed -i 's/ENVIRONMENT_NAME/{{.TFT_CONTEXT}}/g' "{{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json"
     requires:
       vars: [TFT_CONTEXT]
 
@@ -329,10 +333,10 @@ tasks:
       TFT_CLI_BACKEND_S3DDB_OPT: >
         -backend-config=\"encrypt=true\"
         -backend-config=\"workspace_key_prefix=workspaces\"
-        -backend-config=\"assume_role={role_arn=\\\"{{.TFT_CLI_BACKEND_CONFIG.backend_s3.role_arn}}\\\"}\"
-        -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backend_s3.region}}\"
-        -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_bucket}}\"
-        -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_ddb_table}}\"
-        -backend-config=\"key=components/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
+        -backend-config=\"assume_role={role_arn=\\\"{{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.role_arn}}\\\"}\"
+        -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.region}}\"
+        -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.tfstate_bucket}}\"
+        -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.tfstate_ddb_table}}\"
+        -backend-config=\"key=components/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
       TFT_CLI_BACKEND_OPT:
         sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{else}}{{.TFT_CLI_BACKEND_S3DDB_OPT}}{{end}}

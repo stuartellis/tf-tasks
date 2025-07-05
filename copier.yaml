@@ -29,6 +29,7 @@ _envops:
 _skip_if_exists:
   - /.gitignore
   - /Taskfile.yaml
+  - /README.md
 
 project_name:
   type: str

@@ -241,9 +241,9 @@ tasks:
     requires:
       vars: [TFT_UNIT]
 
-  ## Tasks for identifiers ##
+  ## Tasks for instances ##
 
-  id:handle:
+  instance:handle:
     desc: Handle for the instance of the TF unit
     silent: true
     cmds:
@@ -259,10 +259,10 @@ tasks:
       TFT_HANDLE:
         ref: "substr 0 8 .TFT_SHA256"
 
-  id:sha256:
+  instance:sha256:
     desc: SHA256 hash for the instance of the TF unit
     aliases:
-      - id
+      - instance
     silent: true
     cmds:
       - echo "{{.TFT_SHA256}}"

@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: [[ copyright_date ]]-present [[ maintainer_fullname ]] <[[ maintainer_email ]]>
+#
+# SPDX-License-Identifier: MIT
+#
+# Default integration test
+#
+# This depends on the AWS Parameter Store parameter for instance hash.
+# If you do not use AWS, change the tests so that they do not rely on this parameter.
+
+run "setup" {
+  command = apply
+
+  module {
+    source = "./tests/setup"
+  }
+}
+
+run "standard_apply" {
+  command = apply
+
+  variables {
+    tft_edition = run.setup.random_tft_edition_name
+  }
+
+  assert {
+    condition     = output.ssm_param_meta_instance_sha256_path == "/metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition}/sha256"
+    error_message = "Specified path ${output.ssm_param_meta_instance_sha256_path} does not expected path /metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition}/sha256."
+  }
+}

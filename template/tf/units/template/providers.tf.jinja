@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: [[ copyright_date ]]-present [[ maintainer_fullname ]] <[[ maintainer_email ]]>
+# SPDX-FileCopyrightText: 2025-present Stuart Ellis <stuart@stuartellis.name>
 #
 # SPDX-License-Identifier: MIT
 #
@@ -11,11 +11,12 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Environment = var.environment_name
-      Product     = var.product_name
-      Provisioner = "Terraform"
-      TfEdition   = var.edition
-      TfUnit      = var.unit_name
+      Provisioner    = "Terraform"
+      Edition        = local.meta_edition
+      Environment    = local.meta_environment_name
+      Product        = local.meta_product_name
+      Component      = local.meta_component_name
+      InstanceSha256 = local.meta_instance_sha256_hash
     }
   }
 }

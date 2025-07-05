@@ -14,14 +14,14 @@ terraform {
   }
 }
 
-resource "random_string" "edition_suffix" {
+resource "random_string" "tft_edition_suffix" {
   length  = 5
   numeric = false
   special = false
   upper   = false
 }
 
-output "random_edition_name" {
-  value       = "tt${random_string.edition_suffix.result}"
-  description = "A random edition name."
+output "random_tft_edition_name" {
+  value       = "tt${random_string.tft_edition_suffix.result}"
+  description = "TFT: A random edition name."
 }

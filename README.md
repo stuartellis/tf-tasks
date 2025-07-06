@@ -399,9 +399,7 @@ The tasks:
 
 ### Units - TF Modules as Components
 
-To work with the tooling, a TF module must be a valid [root module](https://opentofu.org/docs/language/modules/), and the input variables must include four string variables that have specific names. This tooling refers to modules that follow these requirements as _units_.
-
-These requirements enable us to handle every unit as a component that behaves in a standard way. Each instance of the resources that are defined by a component unit can be independently created, tested, updated or destroyed.
+To work with the tooling, a TF module must be a valid [root module](https://opentofu.org/docs/language/modules/), and the input variables must include four string variables that have specific names. This tooling refers to modules that follow these requirements as _units_. These requirements enable us to handle every unit as a component that behaves in a standard way, regardless of the differences between them. For example, since each unit is a separate root module, you can have different versions of the same providers in different units.
 
 The four required input variables are:
 
@@ -425,7 +423,7 @@ The tooling sets the values of the required variables when it runs TF commands o
 - `tft_unit_name` - The name of the unit itself
 - `tft_edition` - Set as the value `default`, except when using an [extra instance](#extra-instances---workspaces-and-tests) or running [tests](#testing)
 
-The provided code for new units also includes the file `meta_locals.tf`, which defines locals that use these variables to help you generate [names and identifiers](#managing-resource-names). These include a `handle`, a short version of a SHA256 hash for the instance. This means that you can deploy as many instances of the module as you wish, as long as you use the `handle` as part of each resource name:
+The provided code for new units also includes the file `meta_locals.tf`, which defines locals that use these variables to help you generate [names and identifiers](#managing-resource-names). These include a `handle`, a short version of a SHA256 hash for the instance. This means that you can deploy as many instances of the module as you wish without conflicts, as long as you use the `handle` as part of each resource name:
 
 ```hcl
 resource "aws_dynamodb_table" "example_table" {
@@ -436,7 +434,7 @@ resource "aws_dynamodb_table" "example_table" {
 
 If the provided code is not appropriate, you can customise the contents of a module in any way that you need. The tooling automatically finds all of the modules in the directory `tf/units/`. It only requires that a module is a valid TF root module and accepts the four defined input variables. The `handle` and other locals in `meta_locals.tf` give you a set of conventions to help you manage resource names, but the tooling does not rely on them.
 
-> Since each unit is a separate module, you can have different versions of the same providers in separate units.
+> If you do not use the `handle` or an equivalent hash in the name of a resource, you must decide how to ensure that each copy of the resource will have a unique name.
 
 ### Contexts - Configuration Profiles
 
@@ -489,13 +487,11 @@ TF has two different ways to create extra copies of the same infrastructure from
 
 The extra copies of resources for workspaces and tests create a problem. If you run the same code with the same inputs TF could attempt to create multiple copies of resources with the same name. Cloud services often refuse to allow you to have multiple resources with identical names. They may also keep deleted resources for a period of time, which prevents you from creating new resources that have the same names as other resources that you have deleted.
 
-To solve this problem, the tooling allows each copy of a set of infrastructure to have a [separate identifier](#ensuring-unique-identifiers-for-instances), regardless of how the copy was created. You can have as many copies of resources as you wish, as long as you use the local `handle` as part of resource names.
+To solve this problem, the tooling allows each copy of a set of infrastructure to have a separate identifier, regardless of how the copy was created. This identifier is called the _edition_. The edition is always set to the value _default_, unless you [run a test](#testing) or decide to [use an extra instance](#using-extra-instances).
 
-#### Ensuring Unique Identifiers for Instances
+The provided TF code for modules combines the edition and the other standard variables to create a unique SHA256 hash for the instance. A short version of this hash is registered in the locals as `handle`, so that we can create unique names for resources. The full version of this hash is also registered as a local called `meta_instance_sha256_hash`, and attached to resources as an AWS tag.
 
-The code that is provided for new modules has a feature to avoid name conflicts between instances. If you use the local called `handle` in resource names each instance of a resource will have a separate name. This relies on behaviour that is built into the tooling and the provided code.
-
-The tooling allows every copy of a set of infrastructure to have a separate identifier, which is called the _edition_. The edition is always set to the value _default_, unless you [run a test](#testing) or decide to [use an extra instance](#using-extra-instances). The provided TF code for modules combines `tft_edition` and the other required variables to create a unique SHA256 hash for the instance. A short version of this hash is registered in the locals as `handle`, so that we can create unique names for resources. The full version of this hash is also registered as a local called `meta_instance_sha256_hash`, and attached to resources as an AWS tag.
+A [later section](#managing-resource-names) has more details about working with resource names and instance hashes.
 
 #### Working with Extra Instances
 
@@ -537,16 +533,16 @@ locals {
 
 The SHA256 hash in the locals provides a unique identifier for each instance of the root module. This enables us to have a short `handle` that we can use in any kind of resource name. For example, we might create large numbers of Lambdas in an AWS account with different TF root modules, and they will not conflict if the name of each Lambda includes the `handle`.
 
-For convenience, the tooling includes tasks to show the same SHA256 hashes, so that you can match deployed resources to the code that produced them:
+For convenience, the tooling includes tasks to calculate the handle and the full SHA256 hash, so that you can match deployed resources to the code that produced them:
 
 ```shell
 TFT_CONTEXT=dev TFT_UNIT=my-app task tft:instance:handle
 TFT_CONTEXT=dev TFT_UNIT=my-app task tft:instance:sha256
 ```
 
-The example code deploys an AWS Parameter Store parameter that has the SHA256 hash, and also attaches an `InstanceSha256` tag to every resource. This enables us to query AWS for resources by instance.
+The provided module code also deploys an AWS Parameter Store parameter that has the SHA256 hash, and attaches an `InstanceSha256` tag to every resource. This enables us to query AWS for resources by instance.
 
-> The test in the unit template includes code to set the value of the variable `tft_edition` to a random string with the prefix `tt`. This means that test copies of resources have unique identifiers and will not conflict with existing resources that were deployed with the same TF module.
+> The provided test setup in each unit includes code to set the value of the variable `tft_edition` to a random string with the prefix `tt`. This means that test copies of resources have unique identifiers and will not conflict with existing resources that were deployed with the same TF module.
 
 ### Shared Modules
 

@@ -74,7 +74,7 @@ task tft:apply
 You can always specifically set the unit and context for a task. This example runs `validate` on the module:
 
 ```shell
-export TFT_CONTEXT=dev TFT_UNIT=my-app task tft:validate
+TFT_CONTEXT=dev TFT_UNIT=my-app task tft:validate
 ```
 
 Code included in each TF module enables [unique identifiers for instances](#managing-resource-names), so that you can have multiple copies of the resources at the same time. The only requirement is that you include `handle` as part of each resource name:
@@ -399,7 +399,16 @@ The tasks:
 
 ### Units - TF Modules as Components
 
-You define each set of infrastructure code as a component. Every infrastructure component is a separate TF root [module](https://opentofu.org/docs/language/modules/). This means that each component can be created, tested, updated or destroyed independently of the others. This tooling refers to these components as _units_.
+To work with the tooling, a TF module must be a valid [root module](https://opentofu.org/docs/language/modules/), and the input variables must include four string variables that have specific names. This tooling refers to modules that follow these requirements as _units_.
+
+These requirements enable us to handle every unit as a component that behaves in a standard way. Each instance of the resources that are defined by a component unit can be independently created, tested, updated or destroyed.
+
+The four required input variables are:
+
+- `tft_product_name` (string) - The name of the product or project
+- `tft_environment_name` (string) - The name of the environment
+- `tft_unit_name` (string) - The name of the component
+- `tft_edition` (string) - An identifier for the specific instance of the resources
 
 To create a new unit, use the `tft:new` task:
 
@@ -407,14 +416,7 @@ To create a new unit, use the `tft:new` task:
 TFT_UNIT=my-app task tft:new
 ```
 
-Each unit is created as a subdirectory in the directory `tf/units/`.
-
-The tooling only requires that each unit is a valid TF root module that accepts four variables. The provided code implements these in the file `tft_variables.tf`:
-
-- `tft_product_name` (string) - The name of the product or project
-- `tft_environment_name` (string) - The name of the environment
-- `tft_unit_name` (string) - The name of the component
-- `tft_edition` (string) - An identifier for the specific instance of the resources
+Each unit is created as a subdirectory in the directory `tf/units/`. The provided code implements the required input variables in the file `tft_variables.tf`.
 
 The tooling sets the values of the required variables when it runs TF commands on a unit:
 
@@ -423,7 +425,7 @@ The tooling sets the values of the required variables when it runs TF commands o
 - `tft_unit_name` - The name of the unit itself
 - `tft_edition` - Set as the value `default`, except when using an [extra instance](#extra-instances---workspaces-and-tests) or running [tests](#testing)
 
-The provided code for new units has locals that use these variables to help you generate [names and identifiers](#managing-resource-names). These include a `handle`, a short version of a SHA256 hash for the instance. This means that you can deploy as many instances of the module as you wish, as long as you use the `handle` as part of each resource name:
+The provided code for new units also includes the file `meta_locals.tf`, which defines locals that use these variables to help you generate [names and identifiers](#managing-resource-names). These include a `handle`, a short version of a SHA256 hash for the instance. This means that you can deploy as many instances of the module as you wish, as long as you use the `handle` as part of each resource name:
 
 ```hcl
 resource "aws_dynamodb_table" "example_table" {
@@ -432,7 +434,7 @@ resource "aws_dynamodb_table" "example_table" {
 
 > Only use the required variables in locals, then use those locals to define resource names. This ensures that your deployed resources are not tied to the details of the tooling.
 
-If the default behaviour is not appropriate, you can customise the contents of modules in any way that you need. The tooling automatically finds all of the modules in the directory `tf/units/`. It only requires that each module is a valid TF root module and accepts the four input variables.
+If the provided code is not appropriate, you can customise the contents of a module in any way that you need. The tooling automatically finds all of the modules in the directory `tf/units/`. It only requires that a module is a valid TF root module and accepts the four defined input variables. The `handle` and other locals in `meta_locals.tf` give you a set of conventions to help you manage resource names, but the tooling does not rely on them.
 
 > Since each unit is a separate module, you can have different versions of the same providers in separate units.
 
@@ -491,7 +493,7 @@ To solve this problem, the tooling allows each copy of a set of infrastructure t
 
 #### Ensuring Unique Identifiers for Instances
 
-If you include the local `handle` in all resource names then you will not experience names conflicts between instances. This relies on behaviour that is built into the tooling and the provided code for modules.
+The code that is provided for new modules has a feature to avoid name conflicts between instances. If you use the local called `handle` in resource names each instance of a resource will have a separate name. This relies on behaviour that is built into the tooling and the provided code.
 
 The tooling allows every copy of a set of infrastructure to have a separate identifier, which is called the _edition_. The edition is always set to the value _default_, unless you [run a test](#testing) or decide to [use an extra instance](#using-extra-instances). The provided TF code for modules combines `tft_edition` and the other required variables to create a unique SHA256 hash for the instance. A short version of this hash is registered in the locals as `handle`, so that we can create unique names for resources. The full version of this hash is also registered as a local called `meta_instance_sha256_hash`, and attached to resources as an AWS tag.
 
@@ -516,7 +518,7 @@ For consistency and the best compatibility between systems, we should always fol
 - _Environment name:_ `tft_environment_name` - 8 characters or less
 - _Instance name:_ `tft_edition` - 8 characters or less
 
-To avoid coupling live resources directly to the variables that TFT provides, do not reference these variables directly in resource names. Use these variables in locals, and then use the locals to set resource names. For convenience, the code in the unit template includes locals and outputs that you can use in resource names. These are defined in the file `meta_locals.tf`:
+To avoid coupling live resources directly to the variables that TFT provides, do not reference these variables directly in resource names. Use these variables in locals, and then use the locals to set resource names. For convenience, the code that is provided for new modules includes locals and outputs that you can use in resource names. These are defined in the file `meta_locals.tf`:
 
 ```hcl
 locals {
@@ -535,7 +537,7 @@ locals {
 
 The SHA256 hash in the locals provides a unique identifier for each instance of the root module. This enables us to have a short `handle` that we can use in any kind of resource name. For example, we might create large numbers of Lambdas in an AWS account with different TF root modules, and they will not conflict if the name of each Lambda includes the `handle`.
 
-The tooling includes tasks to show the identifiers for instances, so that you can match deployed resources to the code that produced them:
+For convenience, the tooling includes tasks to show the same SHA256 hashes, so that you can match deployed resources to the code that produced them:
 
 ```shell
 TFT_CONTEXT=dev TFT_UNIT=my-app task tft:instance:handle

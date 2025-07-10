@@ -10,6 +10,13 @@
 # Begin with yamllint default settings
 extends: default
 
+# File extensions
+yaml-files:
+  - "*.yaml.jinja"
+  - "*.yaml"
+  - "*.yml"
+  - ".yamllint"
+
 rules:
   # Rules for curly braces: {}
   braces:

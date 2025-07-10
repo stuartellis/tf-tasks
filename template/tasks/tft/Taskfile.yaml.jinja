@@ -125,7 +125,7 @@ tasks:
       vars: [TFT_UNIT]
 
   console:
-    desc: TF console for unit
+    desc: Open a TF console for unit
     aliases:
       - shell
     interactive: true
@@ -244,7 +244,7 @@ tasks:
   ## Tasks for instances ##
 
   instance:handle:
-    desc: Handle for the instance of the TF unit
+    desc: Show the handle for the instance of the TF unit
     silent: true
     cmds:
       - echo "{{.TFT_HANDLE}}"
@@ -260,7 +260,7 @@ tasks:
         ref: "substr 0 8 .TFT_SHA256"
 
   instance:sha256:
-    desc: SHA256 hash for the instance of the TF unit
+    desc: Show the SHA256 hash for the instance of the TF unit
     aliases:
       - instance
     silent: true

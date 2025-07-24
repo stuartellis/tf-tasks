@@ -18,8 +18,8 @@ locals {
   meta_product_name         = lower(var.tft_product_name)
   meta_instance_sha256_hash = sha256("${local.meta_product_name}-${local.meta_environment_name}-${local.meta_component_name}-${local.meta_edition}")
 
-  # Use this in resource names
-  handle = substr(local.meta_instance_sha256_hash, 0, 8)
+  # Instance identifier: use this in resource names
+  edition_id = substr(local.meta_instance_sha256_hash, 0, 8)
 }
 
 output "meta_instance_sha256_hash" {
@@ -27,7 +27,7 @@ output "meta_instance_sha256_hash" {
   description = "Meta: The SHA256 hash that identifies this instance of the TF root module."
 }
 
-output "meta_instance_handle" {
-  value       = local.handle
+output "meta_instance_edition_id" {
+  value       = local.edition_id
   description = "Meta: An identifier for resources managed by this instance of the TF root module."
 }

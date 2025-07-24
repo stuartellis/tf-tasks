@@ -81,7 +81,7 @@ Code included in each TF module enables [unique identifiers for instances](#mana
 
 ```hcl
 resource "aws_dynamodb_table" "example_table" {
-  name = "${local.meta_product_name}-example-${local.handle}"
+  name = "${local.meta_product_name}-example-${local.edition_id}"
 ```
 
 To create [an extra copy](#extra-instances---workspaces-and-tests) of the resources for a module, set the variable `TFT_EDITION` with a unique name for the copy. This example will deploy an extra instance called `copy2` alongside the main set of resources:
@@ -427,7 +427,7 @@ The provided code for new units also includes the file `meta_locals.tf`, which d
 
 ```hcl
 resource "aws_dynamodb_table" "example_table" {
-  name = "${local.meta_product_name}-example-${local.handle}"
+  name = "${local.meta_product_name}-example-${local.edition_id}"
 ```
 
 > Only use the required variables in locals, then use those locals to define resource names. This ensures that your deployed resources are not tied to the details of the tooling.

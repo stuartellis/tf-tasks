@@ -9,13 +9,13 @@
 #
 # If you do not use AWS, remove this file and change the tests so that they do not rely on this parameter.
 
-resource "aws_ssm_parameter" "meta_instance_sha256" {
-  name  = "/metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition}/sha256"
+resource "aws_ssm_parameter" "meta_instance_edition_id" {
+  name  = "/metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition}/edition_id"
   type  = "String"
-  value = local.meta_instance_sha256_hash
+  value = local.edition_id
 }
 
-output "ssm_param_meta_instance_sha256_path" {
-  value       = aws_ssm_parameter.meta_instance_sha256.name
-  description = "Meta: The SSM Parameter that provides the instance SHA256 hash for a deployed TF root module."
+output "ssm_param_meta_instance_edition_id_path" {
+  value       = aws_ssm_parameter.meta_instance_edition_id.name
+  description = "Meta: The SSM Parameter storing the unique ID for this instance of TF root module."
 }

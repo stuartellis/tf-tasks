@@ -16,7 +16,10 @@
 # - Task
 # - Terraform or OpenTofu
 #
-# It requires these environment variables to work on a unit:
+# A _unit_ is a TF root module that can be managed by these tasks.
+# Each instance of a _unit_ is an _edition_.
+#
+# The tasks require these environment variables to work on a unit:
 #
 # TFT_CONTEXT - TF configuration
 # TFT_UNIT    - Name of unit
@@ -241,39 +244,42 @@ tasks:
     requires:
       vars: [TFT_UNIT]
 
-  ## Tasks for instances ##
+  ## Tasks for editions (instances of TF root modules) ##
 
-  instance:handle:
-    desc: Show the handle for the instance of the TF unit
+  edition:id:
+    desc: Show the unique ID for the instance of the TF unit
+    aliases:
+      - instance:id
+      - edition
     silent: true
     cmds:
-      - echo "{{.TFT_HANDLE}}"
+      - echo "{{.TFT_EDITION_ID}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
-      TFT_INSTANCE_ID: "{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_CONTEXT}}-{{.TFT_UNIT}}-{{.CURRENT_TFT_EDITION}}"
-      TFT_LOWERCASE_INSTANCE_ID:
-        ref: "lower .TFT_INSTANCE_ID"
+      TFT_INSTANCE_NAME: "{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_CONTEXT}}-{{.TFT_UNIT}}-{{.CURRENT_TFT_EDITION}}"
+      TFT_LOWERCASE_INSTANCE_NAME:
+        ref: "lower .TFT_INSTANCE_NAME"
       TFT_SHA256:
-        ref: "sha256sum .TFT_LOWERCASE_INSTANCE_ID"
-      TFT_HANDLE:
+        ref: "sha256sum .TFT_LOWERCASE_INSTANCE_NAME"
+      TFT_EDITION_ID:
         ref: "substr 0 8 .TFT_SHA256"
 
-  instance:sha256:
+  edition:sha256:
     desc: Show the SHA256 hash for the instance of the TF unit
     aliases:
-      - instance
+      - instance:sha256
     silent: true
     cmds:
       - echo "{{.TFT_SHA256}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
-      TFT_INSTANCE_ID: "{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_CONTEXT}}-{{.TFT_UNIT}}-{{.CURRENT_TFT_EDITION}}"
-      TFT_LOWERCASE_INSTANCE_ID:
-        ref: "lower .TFT_INSTANCE_ID"
+      TFT_INSTANCE_NAME: "{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_CONTEXT}}-{{.TFT_UNIT}}-{{.CURRENT_TFT_EDITION}}"
+      TFT_LOWERCASE_INSTANCE_NAME:
+        ref: "lower .TFT_INSTANCE_NAME"
       TFT_SHA256:
-        ref: "sha256sum .TFT_LOWERCASE_INSTANCE_ID"
+        ref: "sha256sum .TFT_LOWERCASE_INSTANCE_NAME"
 
   ## Context tasks ##
 

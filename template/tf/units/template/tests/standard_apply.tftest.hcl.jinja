@@ -23,7 +23,7 @@ run "standard_apply" {
   }
 
   assert {
-    condition     = output.ssm_param_meta_instance_edition_id_path == "/metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition_name}/edition_id"
-    error_message = "Specified path ${output.ssm_param_meta_instance_sha256_path} does not expected path /metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition_name}/edition_id."
+    condition     = output.ssm_param_meta_instance_edition_id_path == "/metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition_name}/edition-id"
+    error_message = "Specified path ${output.ssm_param_meta_instance_edition_id_path} does not expected path /metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition_name}/edition-id."
   }
 }

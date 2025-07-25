@@ -141,7 +141,7 @@ tasks:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
-      TFT_CLI_VARS_OPT: "-var='tft_product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='tft_unit_name={{.TFT_UNIT}}' -var='tft_environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='tft_edition={{.CURRENT_TFT_EDITION}}'"
+      TFT_CLI_VARS_OPT: "-var='tft_product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='tft_unit_name={{.TFT_UNIT}}' -var='tft_environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='tft_edition_name={{.CURRENT_TFT_EDITION}}'"
 
   destroy:
     desc: Destroy resources for TF unit
@@ -154,7 +154,7 @@ tasks:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
-      TFT_CLI_VARS_OPT: "-var='tft_product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='tft_unit_name={{.TFT_UNIT}}' -var='tft_environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='tft_edition={{.CURRENT_TFT_EDITION}}'"
+      TFT_CLI_VARS_OPT: "-var='tft_product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='tft_unit_name={{.TFT_UNIT}}' -var='tft_environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='tft_edition_name={{.CURRENT_TFT_EDITION}}'"
 
   fmt:
     desc: Format code for TF unit
@@ -211,7 +211,7 @@ tasks:
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
       TFT_CLI_PLAN_PATH: "{{.TFT_TMP_DIR}}/{{.CURRENT_TFT_PRODUCT_NAME}}-{{.TFT_UNIT}}-{{.TFT_CONTEXT_CONFIG.metadata.environment}}-{{.CURRENT_TFT_EDITION}}"
-      TFT_CLI_VARS_OPT: "-var='tft_product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='tft_unit_name={{.TFT_UNIT}}' -var='tft_environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='tft_edition={{.CURRENT_TFT_EDITION}}'"
+      TFT_CLI_VARS_OPT: "-var='tft_product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='tft_unit_name={{.TFT_UNIT}}' -var='tft_environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='tft_edition_name={{.CURRENT_TFT_EDITION}}'"
 
   rm:
     desc: Remove code for TF unit
@@ -235,7 +235,7 @@ tasks:
         sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
       TFT_CONTEXT_CONFIG:
         ref: "fromJson .TFT_CONTEXT_DOCUMENT"
-      TFT_CLI_VARS_OPT: "-var='tft_product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='tft_unit_name={{.TFT_UNIT}}' -var='tft_environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='tft_edition={{.CURRENT_TFT_EDITION}}'"
+      TFT_CLI_VARS_OPT: "-var='tft_product_name={{.CURRENT_TFT_PRODUCT_NAME}}' -var='tft_unit_name={{.TFT_UNIT}}' -var='tft_environment_name={{.TFT_CONTEXT_CONFIG.metadata.environment}}' -var='tft_edition_name={{.CURRENT_TFT_EDITION}}'"
 
   validate:
     desc: Validate TF unit

@@ -25,7 +25,7 @@ variable "tft_unit_name" {
   description = "TFT: Unit name."
 }
 
-variable "tft_edition" {
+variable "tft_edition_name" {
   type        = string
   description = "TFT: Edition."
 }

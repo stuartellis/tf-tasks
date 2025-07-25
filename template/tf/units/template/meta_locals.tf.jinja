@@ -13,10 +13,10 @@ locals {
 
   # Use these in tags and labels
   meta_component_name       = lower(var.tft_unit_name)
-  meta_edition              = lower(var.tft_edition)
+  meta_edition_name              = lower(var.tft_edition_name)
   meta_environment_name     = lower(var.tft_environment_name)
   meta_product_name         = lower(var.tft_product_name)
-  meta_instance_sha256_hash = sha256("${local.meta_product_name}-${local.meta_environment_name}-${local.meta_component_name}-${local.meta_edition}")
+  meta_instance_sha256_hash = sha256("${local.meta_product_name}-${local.meta_environment_name}-${local.meta_component_name}-${local.meta_edition_name}")
 
   # Instance identifier: use this in resource names
   edition_id = substr(local.meta_instance_sha256_hash, 0, 8)

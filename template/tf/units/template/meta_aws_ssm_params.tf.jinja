@@ -10,7 +10,7 @@
 # If you do not use AWS, remove this file and change the tests so that they do not rely on this parameter.
 
 resource "aws_ssm_parameter" "meta_instance_edition_id" {
-  name  = "/metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition}/edition_id"
+  name  = "/metadata/${local.meta_product_name}/${local.meta_environment_name}/${local.meta_component_name}/${local.meta_edition_name}/edition_id"
   type  = "String"
   value = local.edition_id
 }

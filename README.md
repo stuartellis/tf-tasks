@@ -253,9 +253,9 @@ task tft:plan
 task tft:apply
 ```
 
-Each instance of a unit has an identical configuration as other instances that use the specified context, apart from the tfvar `tft_edition`. The tooling automatically sets the value of the tfvar `tft_edition` to match `TFT_EDITION`. This ensures that every edition has a unique identifier that can be used in TF code.
+Each instance of a unit has an identical configuration as other instances that use the specified context, apart from the tfvar `tft_edition_name`. The tooling automatically sets the value of the tfvar `tft_edition_name` to match `TFT_EDITION`. This ensures that every edition has a unique identifier that can be used in TF code.
 
-Only set `TFT_EDITION` when you want to create an extra copy of a unit. If you do not specify a edition identifier, TF uses the default workspace for state, and the value of the tfvar `tft_edition` is `default`.
+Only set `TFT_EDITION` when you want to create an extra copy of a unit. If you do not specify a edition identifier, TF uses the default workspace for state, and the value of the tfvar `tft_edition_name` is `default`.
 
 Once you no longer need the extra instance, run `tft:destroy` to delete the resources, and then run `tft:forget` to delete the TF remote state for the extra instance:
 
@@ -269,7 +269,7 @@ task tft:forget
 
 This tooling supports the [validate](https://opentofu.org/docs/cli/commands/validate/) and [test](https://opentofu.org/docs/cli/commands/test/) features of TF. Each unit includes a test configuration, so that you can run immediately run tests on the module as soon as it is created.
 
-A test creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of units do not conflict with other copies of the resources, the test in the unit template includes code to set the value of `tft_edition` to a random string with the prefix `tt`.
+A test creates and then immediately destroys resources without storing the state. To ensure that temporary test copies of units do not conflict with other copies of the resources, the test in the unit template includes code to set the value of `tft_edition_name` to a random string with the prefix `tt`.
 
 To check whether _terraform fmt_ needs to be run on the module, use the `tft:check-fmt` task:
 
@@ -406,7 +406,7 @@ The four required input variables are:
 - `tft_product_name` (string) - The name of the product or project
 - `tft_environment_name` (string) - The name of the environment
 - `tft_unit_name` (string) - The name of the component
-- `tft_edition` (string) - An identifier for the specific instance of the resources
+- `tft_edition_name` (string) - An identifier for the specific instance of the resources
 
 To create a new unit, use the `tft:new` task:
 
@@ -421,7 +421,7 @@ The tooling sets the values of the required variables when it runs TF commands o
 - `tft_product_name` - Defaults to the name of the project, but you can [override this](#settings-for-features)
 - `tft_environment_name` - Provided by the current [context](#contexts---configuration-profiles)
 - `tft_unit_name` - The name of the unit itself
-- `tft_edition` - Set as the value `default`, except when using an [extra instance](#extra-instances---workspaces-and-tests) or running [tests](#testing)
+- `tft_edition_name` - Set as the value `default`, except when using an [extra instance](#extra-instances---workspaces-and-tests) or running [tests](#testing)
 
 The provided code for new units also includes the file `meta_locals.tf`, which defines locals that use these variables to help you generate [names and identifiers](#managing-resource-names). These include a `handle`, a short version of a SHA256 hash for the instance. This means that you can deploy as many instances of the module as you wish without conflicts, as long as you use the `handle` as part of each resource name:
 
@@ -497,11 +497,11 @@ A [later section](#managing-resource-names) has more details about working with 
 
 By default, TF works with the main copy of the resources for a module. This means that it uses the `default` workspace.
 
-To work with another copy of the resources, set the variable `TFT_EDITION`. The tooling then sets the active workspace to match the variable `TFT_EDITION` and sets the variable `tft_edition` to the same value. If a workspace with that name does not already exist, it will automatically be created. To remove a workspace, first run the `destroy` task to terminate the copy of the resources that it manages, and then run the `forget` task to delete the stored state.
+To work with another copy of the resources, set the variable `TFT_EDITION`. The tooling then sets the active workspace to match the variable `TFT_EDITION` and sets the variable `tft_edition_name` to the same value. If a workspace with that name does not already exist, it will automatically be created. To remove a workspace, first run the `destroy` task to terminate the copy of the resources that it manages, and then run the `forget` task to delete the stored state.
 
 You can set the variable `TFT_EDITION` to any string. For example, you can configure your CI system to set the variable `TFT_EDITION` with values that are based on branch names.
 
-You do not set `TFT_EDITION` for tests. The example test in the unit template includes code to automatically set the value of `tft_edition` to a random string with the prefix `tt`. This is because we need to use a pattern for `tft_edition` that guarantees a unique value for every test run. You can change this to use a different format in the `tft_edition` identifier for your tests.
+You do not set `TFT_EDITION` for tests. The example test in the unit template includes code to automatically set the value of `tft_edition_name` to a random string with the prefix `tt`. This is because we need to use a pattern for `tft_edition_name` that guarantees a unique value for every test run. You can change this to use a different format in the `tft_edition_name` identifier for your tests.
 
 ### Managing Resource Names
 
@@ -512,7 +512,7 @@ For consistency and the best compatibility between systems, we should always fol
 - _Product or project name:_ `tft_product_name` - 12 characters or less
 - _Component name:_ `tft_unit_name` - 12 characters or less
 - _Environment name:_ `tft_environment_name` - 8 characters or less
-- _Instance name:_ `tft_edition` - 8 characters or less
+- _Instance name:_ `tft_edition_name` - 8 characters or less
 
 To avoid coupling live resources directly to the variables that TFT provides, do not reference these variables directly in resource names. Use these variables in locals, and then use the locals to set resource names. For convenience, the code that is provided for new modules includes locals and outputs that you can use in resource names. These are defined in the file `meta_locals.tf`:
 
@@ -521,10 +521,10 @@ locals {
 
   # Use these in tags and labels
   meta_component_name       = lower(var.tft_unit_name)
-  meta_edition              = lower(var.tft_edition)
+  meta_edition_name         = lower(var.tft_edition_name)
   meta_environment_name     = lower(var.tft_environment_name)
   meta_product_name         = lower(var.tft_product_name)
-  meta_instance_sha256_hash = sha256("${local.meta_product_name}-${local.meta_environment_name}-${local.meta_component_name}-${local.meta_edition}")
+  meta_instance_sha256_hash = sha256("${local.meta_product_name}-${local.meta_environment_name}-${local.meta_component_name}-${local.meta_edition_name}")
 
   # Use this in resource names
   handle = substr(local.meta_instance_sha256_hash, 0, 8)
@@ -542,7 +542,7 @@ TFT_CONTEXT=dev TFT_UNIT=my-app task tft:instance:sha256
 
 The provided module code also deploys an AWS Parameter Store parameter that has the SHA256 hash, and attaches an `InstanceSha256` tag to every resource. This enables us to query AWS for resources by instance.
 
-> The provided test setup in each unit includes code to set the value of the variable `tft_edition` to a random string with the prefix `tt`. This means that test copies of resources have unique identifiers and will not conflict with existing resources that were deployed with the same TF module.
+> The provided test setup in each unit includes code to set the value of the variable `tft_edition_name` to a random string with the prefix `tt`. This means that test copies of resources have unique identifiers and will not conflict with existing resources that were deployed with the same TF module.
 
 ### Shared Modules
 

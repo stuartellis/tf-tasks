@@ -39,6 +39,11 @@ project_description:
   type: str
   help: Your project description
 
+project_license:
+  type: str
+  help: Project license, as an SPDX identifier
+  default: "MIT"
+
 maintainer_fullname:
   type: str
   help: Your full name

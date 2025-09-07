@@ -3,11 +3,13 @@
     "description": "",
     "environment": "ENVIRONMENT_NAME"
   },
-  "backend_s3ddb": {
-    "tfstate_bucket": "",
-    "tfstate_ddb_table": "",
-    "tfstate_dir": "",
-    "region": "",
-    "role_arn": ""
+  "backends": {
+    "s3ddb": {
+      "tfstate_bucket": "",
+      "tfstate_ddb_table": "",
+      "tfstate_dir": "",
+      "region": "",
+      "role_arn": ""
+    }
   }
 }

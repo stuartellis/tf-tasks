@@ -363,6 +363,7 @@ Set these variables to override the defaults:
 | tft:apply     | _terraform apply_ for a unit\*                                                             |
 | tft:check-fmt | Checks whether _terraform fmt_ would change the code for a unit                            |
 | tft:clean     | Remove the generated files for a unit                                                      |
+| tft:clone     | Create a new unit as a copy of an existing unit                                            |
 | tft:console   | _terraform console_ for a unit\*                                                           |
 | tft:context   | An alias for `tft:context:list`.                                                           |
 | tft:destroy   | _terraform apply -destroy_ for a unit\*                                                    |

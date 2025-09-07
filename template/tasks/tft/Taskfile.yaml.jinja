@@ -127,6 +127,17 @@ tasks:
     requires:
       vars: [TFT_UNIT]
 
+  clone:
+    desc: Create a new TF unit as a copy of an existing unit
+    cmds:
+      - cp -r "{{.TFT_UNITS_DIR}}/{{.TFT_SOURCE_UNIT}}/*" "{{.TFT_UNITS_DIR}}/{{.TFT_UNIT}}"
+      - for:
+          var: TFT_FILTERED_TFT_CONTEXTS
+        cmd: cp "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_SOURCE_UNIT}}.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
+      - cmd: cp "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_SOURCE_UNIT}}.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
+    requires:
+      vars: [TFT_SOURCE_UNIT, TFT_UNIT]
+
   console:
     desc: Open a TF console for unit
     aliases:
@@ -187,7 +198,7 @@ tasks:
         cmd: echo "{{.ITEM}}"
 
   new:
-    desc: Create a new TF unit
+    desc: Create a new TF unit from the template
     cmds:
       - cp -r "{{.TFT_UNITS_DIR}}/template" "{{.TFT_UNITS_DIR}}/{{.TFT_UNIT}}"
       - for:

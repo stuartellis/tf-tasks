@@ -12,6 +12,7 @@ This [Copier](https://copier.readthedocs.io/en/stable/) template provides files 
 
 The tooling uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects. It provides an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
 
+- [Monorepo](https://en.wikipedia.org/wiki/Monorepo) projects that contain the code for infrastructure and applications.
 - Multiple infrastructure components in the same code repository. Each of these _units_ is a complete [root module](https://opentofu.org/docs/language/modules/).
 - Multiple instances of the same component with different configurations. The TF configurations are called _contexts_.
 - [Extra instances of a component](#using-extra-instances). Use this to deploy instances from version control branches for development, or to create temporary instances.
@@ -112,6 +113,12 @@ TFT_CONTEXT=dev TFT_UNIT=my-app task tft:test
 
 The integration tests can create and then destroy unique copies of the resources for every test run.
 
+To pass extra options to Terraform or OpenTofu, add `--` to the end of the command, followed by the options:
+
+```shell
+task tft:init -- -upgrade
+```
+
 All of the commands are available through [Task](https://www.stuartellis.name/articles/task-runner/). To see a list of the available tasks in a project, enter _task_ in a terminal window:
 
 ```shell
@@ -188,17 +195,29 @@ The `context.json` file is the configuration file for the context. It specifies 
     "description": "Cloud development environment",
     "environment": "dev"
   },
-  "backend_s3ddb": {
-    "tfstate_bucket": "789000123456-tf-state-dev-eu-west-2",
-    "tfstate_ddb_table": "789000123456-tf-lock-dev-eu-west-2",
-    "tfstate_dir": "dev",
-    "region": "eu-west-2",
-    "role_arn": "arn:aws:iam::789000123456:role/my-tf-state-role"
+  "backends": {
+    "s3": {
+      "tfstate_bucket": "789000123456-tf-state-dev-eu-west-2",
+      "tfstate_dir": "dev",
+      "region": "eu-west-2",
+      "role_arn": "arn:aws:iam::789000123456:role/my-tf-state-role"
+    },
+    "s3ddb": {
+      "tfstate_bucket": "",
+      "tfstate_ddb_table": "",
+      "tfstate_dir": "",
+      "region": "",
+      "role_arn": ""
+    }
   }
 }
 ```
 
-The `backend_s3ddb` section specifies the settings for a TF backend that uses S3 for storage with DynamoDB for locking. The tooling automatically enables encryption for this backend.
+The `backends.s3` section specifies the settings for a TF backend that uses S3 for storage. This uses the [S3 native locking feature](https://opentofu.org/docs/language/settings/backends/s3/) in current versions of Terraform and OpenTofu. It does not use DynamoDB. The tooling will use this backend by default.
+
+The `backends.s3ddb` section specifies the settings for a legacy TF backend that uses S3 for storage and DynamoDB for locking. Only use this type of backend if you need to use an older version of Terraform or OpenTofu.
+
+> The tooling automatically enables encryption for both types of S3 backend.
 
 ### Setting the tfvars for a Context
 
@@ -214,6 +233,12 @@ To create a unit, use `new`:
 TFT_UNIT=my-app task tft:new
 ```
 
+To create a unit as a copy of an existing unit, use `clone`. Specify the existing unit with `TFT_SOURCE_UNIT` and the name of the new unit with `TFT_UNIT`, like this:
+
+```shell
+TFT_SOURCE_UNIT=my-first-app TFT_UNIT=my-new-app task tft:clone
+```
+
 Use `TFT_CONTEXT` and `TFT_UNIT` to create a deployment of the unit with the configuration from the specified context:
 
 ```shell
@@ -222,8 +247,6 @@ task tft:init
 task tft:plan
 task tft:apply
 ```
-
-> You will see a warning when you run `init` with a current version of Terraform. This is because Hashicorp are [deprecating the use of DynamoDB with S3 remote state](https://developer.hashicorp.com/terraform/language/backend/s3#state-locking). To support older versions of Terraform, this tooling will continue to use DynamoDB for a period of time.
 
 ### Customising the Module Code
 
@@ -397,11 +420,12 @@ Set these variables to override the defaults:
 
 ### The `tft:init` Tasks
 
-| Name           | Description                                                             |
-| -------------- | ----------------------------------------------------------------------- |
-| tft:init       | _terraform init_ for a unit. An alias for `tft:init:s3ddb`.             |
-| tft:init:local | _terraform init_ for a unit, with local state.                          |
-| tft:init:s3ddb | _terraform init_ for a unit, with S3 remote state and DynamoDB locking. |
+| Name           | Description                                                              |
+| -------------- | ------------------------------------------------------------------------ |
+| tft:init       | _terraform init_ for a unit. An alias for `tft:init:s3`.                 |
+| tft:init:local | _terraform init_ for a unit, with local state.                           |
+| tft:init:s3    | _terraform init_ for a unit, with S3 remote state and native S3 locking. |
+| tft:init:s3ddb | _terraform init_ for a unit, with S3 remote state and DynamoDB locking.  |
 
 ### What About Dependencies Between Components?
 

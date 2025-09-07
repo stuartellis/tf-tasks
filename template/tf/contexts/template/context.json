@@ -4,6 +4,12 @@
     "environment": "ENVIRONMENT_NAME"
   },
   "backends": {
+    "s3": {
+      "tfstate_bucket": "",
+      "tfstate_dir": "",
+      "region": "",
+      "role_arn": ""
+    },
     "s3ddb": {
       "tfstate_bucket": "",
       "tfstate_ddb_table": "",

@@ -97,7 +97,7 @@ tasks:
   apply:
     desc: Apply TF unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply {{.TFT_CLI_PLAN_PATH}}.tfplan"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply {{.CLI_ARGS}} {{.TFT_CLI_PLAN_PATH}}.tfplan"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
     vars:
@@ -112,9 +112,9 @@ tasks:
     cmds:
       - for:
           var: TFT_FILTERED_TFT_CONTEXTS
-        cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
-      - cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} fmt -check -diff -recursive"
+        cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.CLI_ARGS}} {{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
+      - cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.CLI_ARGS}} {{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} fmt -check -diff -recursive {{.CLI_ARGS}}"
     requires:
       vars: [TFT_UNIT]
 
@@ -133,7 +133,7 @@ tasks:
       - shell
     interactive: true
     cmds:
-      - terraform {{.TFT_CLI_CHDIR_OPT}} console {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}
+      - "terraform {{.TFT_CLI_CHDIR_OPT}} console {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}} {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
@@ -146,7 +146,7 @@ tasks:
   destroy:
     desc: Destroy resources for TF unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}} {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
@@ -159,7 +159,7 @@ tasks:
   fmt:
     desc: Format code for TF unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} fmt"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} {{.CLI_ARGS}} fmt"
       - for:
           var: TFT_FILTERED_TFT_CONTEXTS
         cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt {{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
@@ -170,7 +170,7 @@ tasks:
   forget:
     desc: Delete a workspace from the current TF remote backend
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} workspace delete {{.TFT_EDITION}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} workspace delete {{.CLI_ARGS}} {{.TFT_EDITION}}"
     requires:
       vars: [TFT_UNIT, TFT_EDITION]
     env:
@@ -201,8 +201,8 @@ tasks:
     desc: Create TF plan for unit
     cmds:
       - mkdir -p "{{.TFT_TMP_DIR}}"
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} plan -out={{.TFT_CLI_PLAN_PATH}}.tfplan {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} show -json {{.TFT_CLI_PLAN_PATH}}.tfplan > {{.TFT_CLI_PLAN_PATH}}.json"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} plan {{.CLI_ARGS}} -out={{.TFT_CLI_PLAN_PATH}}.tfplan {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}} {{.CLI_ARGS}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} show -json {{.TFT_CLI_PLAN_PATH}}.tfplan {{.CLI_ARGS}} > {{.TFT_CLI_PLAN_PATH}}.json"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
@@ -227,7 +227,7 @@ tasks:
   test:
     desc: Run TF test for unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} test {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} test {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}} {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
@@ -240,7 +240,7 @@ tasks:
   validate:
     desc: Validate TF unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} validate"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} validate {{.CLI_ARGS}}"
     requires:
       vars: [TFT_UNIT]
 
@@ -318,7 +318,7 @@ tasks:
     desc: Initialise local state for TF unit
     deps: [clean]
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
 
@@ -328,7 +328,7 @@ tasks:
       - init
     deps: [clean]
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}} {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
     vars:

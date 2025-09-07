@@ -97,7 +97,7 @@ tasks:
   apply:
     desc: Apply TF unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply {{.TFT_CLI_PLAN_PATH}}.tfplan"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply {{.CLI_ARGS}} {{.TFT_CLI_PLAN_PATH}}.tfplan"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
     vars:
@@ -112,9 +112,9 @@ tasks:
     cmds:
       - for:
           var: TFT_FILTERED_TFT_CONTEXTS
-        cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
-      - cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} fmt -check -diff -recursive"
+        cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.CLI_ARGS}} {{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
+      - cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt -check -diff -recursive {{.CLI_ARGS}} {{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} fmt -check -diff -recursive {{.CLI_ARGS}}"
     requires:
       vars: [TFT_UNIT]
 
@@ -127,13 +127,25 @@ tasks:
     requires:
       vars: [TFT_UNIT]
 
+  clone:
+    desc: Create a new TF unit as a copy of an existing unit
+    cmds:
+      - "mkdir {{.TFT_UNITS_DIR}}/{{.TFT_UNIT}}"
+      - "cp -r {{.TFT_UNITS_DIR}}/{{.TFT_SOURCE_UNIT}}/* {{.TFT_UNITS_DIR}}/{{.TFT_UNIT}}"
+      - for:
+          var: TFT_FILTERED_TFT_CONTEXTS
+        cmd: cp "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_SOURCE_UNIT}}.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
+      - cmd: cp "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_SOURCE_UNIT}}.tfvars" "{{.TFT_CONTEXTS_DIR}}/{{.TFT_SHARED_CONTEXT}}/{{.TFT_UNIT}}.tfvars"
+    requires:
+      vars: [TFT_SOURCE_UNIT, TFT_UNIT]
+
   console:
     desc: Open a TF console for unit
     aliases:
       - shell
     interactive: true
     cmds:
-      - terraform {{.TFT_CLI_CHDIR_OPT}} console {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}
+      - "terraform {{.TFT_CLI_CHDIR_OPT}} console {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}} {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
@@ -146,7 +158,7 @@ tasks:
   destroy:
     desc: Destroy resources for TF unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} apply -destroy -auto-approve {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}} {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
@@ -159,7 +171,7 @@ tasks:
   fmt:
     desc: Format code for TF unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} fmt"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} {{.CLI_ARGS}} fmt"
       - for:
           var: TFT_FILTERED_TFT_CONTEXTS
         cmd: "{{.CURRENT_TFT_CLI_EXE}} fmt {{.TFT_CONTEXTS_DIR}}/{{.ITEM}}/{{.TFT_UNIT}}.tfvars"
@@ -170,7 +182,7 @@ tasks:
   forget:
     desc: Delete a workspace from the current TF remote backend
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} workspace delete {{.TFT_EDITION}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} workspace delete {{.CLI_ARGS}} {{.TFT_EDITION}}"
     requires:
       vars: [TFT_UNIT, TFT_EDITION]
     env:
@@ -187,7 +199,7 @@ tasks:
         cmd: echo "{{.ITEM}}"
 
   new:
-    desc: Create a new TF unit
+    desc: Create a new TF unit from the template
     cmds:
       - cp -r "{{.TFT_UNITS_DIR}}/template" "{{.TFT_UNITS_DIR}}/{{.TFT_UNIT}}"
       - for:
@@ -201,8 +213,8 @@ tasks:
     desc: Create TF plan for unit
     cmds:
       - mkdir -p "{{.TFT_TMP_DIR}}"
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} plan -out={{.TFT_CLI_PLAN_PATH}}.tfplan {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} show -json {{.TFT_CLI_PLAN_PATH}}.tfplan > {{.TFT_CLI_PLAN_PATH}}.json"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} plan -out={{.TFT_CLI_PLAN_PATH}}.tfplan {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}} {{.CLI_ARGS}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} show -json {{.TFT_CLI_PLAN_PATH}}.tfplan {{.CLI_ARGS}} > {{.TFT_CLI_PLAN_PATH}}.json"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
@@ -227,7 +239,7 @@ tasks:
   test:
     desc: Run TF test for unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} test {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} test {{.TFT_CLI_VARS_OPT}} {{.TFT_CLI_VAR_FILES_OPT}} {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, CURRENT_TFT_PRODUCT_NAME, TFT_UNIT, CURRENT_TFT_EDITION]
     vars:
@@ -240,7 +252,7 @@ tasks:
   validate:
     desc: Validate TF unit
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} validate"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} validate {{.CLI_ARGS}}"
     requires:
       vars: [TFT_UNIT]
 
@@ -318,17 +330,40 @@ tasks:
     desc: Initialise local state for TF unit
     deps: [clean]
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
 
-  init:s3ddb:
-    desc: Initialise S3 remote state with DynamoDB locking for TF unit
+  init:s3:
+    desc: Initialise remote state for TF unit - S3 with native locking
     aliases:
       - init
     deps: [clean]
     cmds:
-      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}}"
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}} {{.CLI_ARGS}}"
+    requires:
+      vars: [TFT_CONTEXT, TFT_UNIT]
+    vars:
+      TFT_CLI_BACKEND_DOCUMENT:
+        sh: cat {{.TFT_CONTEXTS_DIR}}/{{.TFT_CONTEXT}}/context.json
+      TFT_CLI_BACKEND_CONFIG:
+        ref: "fromJson .TFT_CLI_BACKEND_DOCUMENT"
+      TFT_CLI_BACKEND_S3_OPT: >
+        -backend-config=\"encrypt=true\"
+        -backend-config=\"use_lockfile=true\"
+        -backend-config=\"workspace_key_prefix=workspaces\"
+        -backend-config=\"assume_role={role_arn=\\\"{{.TFT_CLI_BACKEND_CONFIG.backends.s3.role_arn}}\\\"}\"
+        -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backends.s3.region}}\"
+        -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backends.s3.tfstate_bucket}}\"
+        -backend-config=\"key=components/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backends.s3.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
+      TFT_CLI_BACKEND_OPT:
+        sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{else}}{{.TFT_CLI_BACKEND_S3_OPT}}{{end}}
+
+  init:s3ddb:
+    desc: Initialise remote state for TF unit - S3 with DynamoDB locking
+    deps: [clean]
+    cmds:
+      - "{{.CURRENT_TFT_CLI_EXE}} {{.TFT_CLI_CHDIR_OPT}} init -input=false {{.TFT_CLI_BACKEND_OPT}} {{.CLI_ARGS}}"
     requires:
       vars: [TFT_CONTEXT, TFT_UNIT]
     vars:
@@ -339,10 +374,10 @@ tasks:
       TFT_CLI_BACKEND_S3DDB_OPT: >
         -backend-config=\"encrypt=true\"
         -backend-config=\"workspace_key_prefix=workspaces\"
-        -backend-config=\"assume_role={role_arn=\\\"{{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.role_arn}}\\\"}\"
-        -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.region}}\"
-        -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.tfstate_bucket}}\"
-        -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.tfstate_ddb_table}}\"
-        -backend-config=\"key=components/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backend_s3ddb.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
+        -backend-config=\"assume_role={role_arn=\\\"{{.TFT_CLI_BACKEND_CONFIG.backends.s3ddb.role_arn}}\\\"}\"
+        -backend-config=\"region={{.TFT_CLI_BACKEND_CONFIG.backends.s3ddb.region}}\"
+        -backend-config=\"bucket={{.TFT_CLI_BACKEND_CONFIG.backends.s3ddb.tfstate_bucket}}\"
+        -backend-config=\"dynamodb_table={{.TFT_CLI_BACKEND_CONFIG.backends.s3ddb.tfstate_ddb_table}}\"
+        -backend-config=\"key=components/{{.CURRENT_TFT_PRODUCT_NAME}}/{{.TFT_CLI_BACKEND_CONFIG.backends.s3ddb.tfstate_dir}}/{{.TFT_UNIT}}.tfstate\"
       TFT_CLI_BACKEND_OPT:
         sh: echo {{if eq .TFT_REMOTE_BACKEND "false"}}{{else}}{{.TFT_CLI_BACKEND_S3DDB_OPT}}{{end}}

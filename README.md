@@ -233,10 +233,10 @@ To create a unit, use `new`:
 TFT_UNIT=my-app task tft:new
 ```
 
-To create a unit as a copy of an existing unit, use `clone`. Specify the existing unit with `TFT_SOURCE_UNIT` and the name of the new unit with `TFT_UNIT`, like this:
+To create a unit as a copy of an existing unit, use `copy`. Specify the existing unit with `TFT_SOURCE_UNIT` and the name of the new unit with `TFT_UNIT`, like this:
 
 ```shell
-TFT_SOURCE_UNIT=my-first-app TFT_UNIT=my-new-app task tft:clone
+TFT_SOURCE_UNIT=my-first-app TFT_UNIT=my-new-app task tft:copy
 ```
 
 Use `TFT_CONTEXT` and `TFT_UNIT` to create a deployment of the unit with the configuration from the specified context:
@@ -386,7 +386,7 @@ Set these variables to override the defaults:
 | tft:apply     | _terraform apply_ for a unit\*                                                             |
 | tft:check-fmt | Checks whether _terraform fmt_ would change the code for a unit                            |
 | tft:clean     | Remove the generated files for a unit                                                      |
-| tft:clone     | Create a new unit as a copy of an existing unit                                            |
+| tft:copy      | Create a new unit as a copy of an existing unit                                            |
 | tft:console   | _terraform console_ for a unit\*                                                           |
 | tft:context   | An alias for `tft:context:list`.                                                           |
 | tft:destroy   | _terraform apply -destroy_ for a unit\*                                                    |

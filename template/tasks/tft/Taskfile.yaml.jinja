@@ -127,7 +127,7 @@ tasks:
     requires:
       vars: [TFT_UNIT]
 
-  clone:
+  copy:
     desc: Create a new TF unit as a copy of an existing unit
     cmds:
       - "mkdir {{.TFT_UNITS_DIR}}/{{.TFT_UNIT}}"

@@ -8,20 +8,20 @@ SPDX-License-Identifier: MIT
 
 [![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-grayscale-inverted-border-orange.json)](https://github.com/copier-org/copier) [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for a [Terraform](https://www.terraform.io/) or [OpenTofu](https://opentofu.org/) in a [monorepo](https://en.wikipedia.org/wiki/Monorepo).
+This [Copier](https://copier.readthedocs.io/en/stable/) template provides files for [OpenTofu](https://opentofu.org/) or [Terraform](https://www.terraform.io/) in a [monorepo](https://en.wikipedia.org/wiki/Monorepo).
 
-The tooling uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects. It provides an opinionated configuration for Terraform and OpenTofu. This configuration enables projects to use built-in features of these tools to support:
+The tooling uses [Task](https://taskfile.dev) as the task runner for the template and the generated projects. It provides an opinionated configuration for OpenTofu and Terraform. This configuration enables projects to use built-in features of these tools to support:
 
 - [Monorepo](https://en.wikipedia.org/wiki/Monorepo) projects that contain the code for infrastructure and applications.
 - Multiple infrastructure components in the same code repository. Each of these _units_ is a complete [root module](https://opentofu.org/docs/language/modules/).
 - Multiple instances of the same component with different configurations. The TF configurations are called _contexts_.
 - [Extra instances of a component](#using-extra-instances). Use this to deploy instances from version control branches for development, or to create temporary instances.
 - [Integration testing](#testing) for every component.
-- [Migrating from Terraform to OpenTofu](#migrating-to-opentofu). You use the same tasks for both.
+- [Migrating from OpenTofu to Terraform](#migrating-to-terraform). You use the same tasks for both.
 
 For more details about how this tooling works and the design decisions, read my [article on designing a wrapper for TF](https://www.stuartellis.name/articles/tf-wrapper-design/).
 
-> This article uses the identifier _TF_ or _tf_ for Terraform and OpenTofu. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft` (_TF Tasks_).
+> This article uses the identifier _TF_ or _tf_ for OpenTofu and Terraform. Both tools accept the same commands and have the same behavior. The tooling itself is just called `tft` (_TF Tasks_).
 
 ## Table of Contents
 
@@ -57,7 +57,7 @@ TFT_CONTEXT=dev task tft:context:new
 TFT_UNIT=my-app task tft:new
 ```
 
-The `tft:new` task creates a _unit_, a complete Terraform root module. Each new root module includes example code for AWS, so that it can work immediately. The context is a configuration profile. You only need to set:
+The `tft:new` task creates a _unit_, a complete root module. Each new root module includes example code for AWS, so that it can work immediately. The context is a configuration profile. You only need to set:
 
 1. Either the [remote state storage](#setting-the-remote-state-for-a-context), OR use [local state](#using-local-tf-state)
 2. The AWS IAM role for TF itself. This is the variable `tf_exec_role_arn` in the tfvars files for the context.
@@ -323,7 +323,7 @@ TFT_CONTEXT=dev TFT_UNIT=my-app task tft:test
 
 ### Using Local TF State
 
-By default, this tooling uses Amazon S3 for [remote state storage](https://opentofu.org/docs/language/state/remote/). To initialize a unit with local state storage, use the task `tft:init:local` rather than `tft:init`:
+By default, this tooling uses an Amazon S3 bucket for [remote state storage](https://opentofu.org/docs/language/state/remote/). To initialize a unit with local state storage, use the task `tft:init:local` rather than `tft:init`:
 
 ```shell
 task tft:init:local
@@ -435,25 +435,25 @@ Similarly, there are no restrictions on how you run tasks on multiple units. You
 
 > This tooling does not explicitly support or conflict with the [stacks feature of Terraform](https://developer.hashicorp.com/terraform/language/stacks). I do not currently test with the stacks feature. This feature is specific to HCP, and not available in OpenTofu.
 
-### Migrating to OpenTofu
+### Migrating to Terraform
 
-By default, this tooling currently uses Terraform. Set `TFT_CLI_EXE` as an environment variable to specify the path to the tool that you wish to use. To use [OpenTofu](https://opentofu.org/), set `TFT_CLI_EXE` with the value `tofu`:
+By default, this tooling currently uses OpenTofu. Set `TFT_CLI_EXE` as an environment variable to specify the path to the tool that you wish to use. To use [OpenTofu](https://opentofu.org/), set `TFT_CLI_EXE` with the value `terraform`:
 
 ```shell
-export TFT_CLI_EXE=tofu
+export TFT_CLI_EXE=terraform
 
 TFT_CONTEXT=dev TFT_UNIT=my-app tft:init
 ```
 
-To specify which version of OpenTofu to use, create a `.opentofu-version` file. This file should contain the version of OpenTofu and nothing else, like this:
+To specify which version of Terraform to use, create a `.terraform-version` file. This file should contain the version of Terraform and nothing else, like this:
 
 ```shell
-1.10.2
+1.12.0
 ```
 
-The `tenv` tool reads this file when installing or running OpenTofu.
+The `tenv` tool reads this file when installing or running Terraform.
 
-> Remember that if you switch between Terraform and OpenTofu, you will need to initialise your unit again, and when you run `apply` it will migrate the TF state. The OpenTofu Website provides [migration guides](https://opentofu.org/docs/intro/migration/), which includes information about code changes that you may need to make.
+> Remember that if you switch between Terraform and OpenTofu, you will need to initialize your unit again, and when you run `apply` it will migrate the TF state. The OpenTofu Website provides [migration guides](https://opentofu.org/docs/intro/migration/), which includes information about code changes that you may need to make.
 
 ## Contributing
 

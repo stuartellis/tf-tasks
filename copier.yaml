@@ -90,6 +90,6 @@ copyright_date:
   help: The copyright date
   default: "[[ current_year ]]"
 
-terraform_version:
+opentofu_version:
   type: str
-  help: Version of Terraform for project
+  help: Version of OpenTofu for project

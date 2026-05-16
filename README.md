@@ -49,8 +49,8 @@ uvx copier copy git+https://github.com/stuartellis/tf-tasks my-project
 # Go to the working directory for the project
 cd my-project
 
-# Ask tenv to detect and install the correct version of Terraform for the project
-tenv terraform install
+# Ask tenv to detect and install the correct version of OpenTofu for the project
+tenv opentofu install
 
 # Create a configuration and a root module for the project
 TFT_CONTEXT=dev task tft:context:new
@@ -201,23 +201,59 @@ The `context.json` file is the configuration file for the context. It specifies 
       "tfstate_dir": "dev",
       "region": "eu-west-2",
       "role_arn": "arn:aws:iam::789000123456:role/my-tf-state-role"
-    },
-    "s3ddb": {
-      "tfstate_bucket": "",
-      "tfstate_ddb_table": "",
-      "tfstate_dir": "",
-      "region": "",
-      "role_arn": ""
     }
   }
 }
 ```
 
-The `backends.s3` section specifies the settings for a TF backend that uses S3 for storage. This uses the [S3 native locking feature](https://opentofu.org/docs/language/settings/backends/s3/) in current versions of Terraform and OpenTofu. It does not use DynamoDB. The tooling will use this backend by default.
+The `backends.s3` section specifies the settings for a TF backend that uses S3 for storage. This uses the [S3 native locking feature](https://opentofu.org/docs/language/settings/backends/s3/) in current versions of OpenTofu and Terraform. It does not use DynamoDB. The tooling will use this backend by default.
 
-The `backends.s3ddb` section specifies the settings for a legacy TF backend that uses S3 for storage and DynamoDB for locking. Only use this type of backend if you need to use an older version of Terraform or OpenTofu.
+To use Amazon S3 with DynamoDB for locking, specify an `s3ddb` backend:
 
-> The tooling automatically enables encryption for both types of S3 backend.
+```json
+{
+  "metadata": {
+    "description": "Cloud development environment",
+    "environment": "dev"
+  },
+  "backends": {
+    "s3ddb": {
+      "tfstate_bucket": "789000123456-tf-state-dev-eu-west-2",
+      "tfstate_ddb_table": "789000123456-tf-lock-dev-eu-west-2",
+      "tfstate_dir": "dev",
+      "region": "eu-west-2",
+      "role_arn": "arn:aws:iam::789000123456:role/my-tf-state-role"
+    }
+  }
+}
+```
+
+> The tooling automatically enables encryption for S3 backends.
+
+This tooling also supports [Cloudflare R2](https://developers.cloudflare.com/r2/) for remote state storage. To use Cloudflare R2, specify the backend as `r2` in the `context.json` file:
+
+```json
+{
+  "metadata": {
+    "description": "Cloud development environment",
+    "environment": "dev"
+  },
+  "backends": {
+    "r2": {
+      "tfstate_bucket": "my-weur-tf-state-dev",
+      "tfstate_dir": "dev",
+      "region": "auto",
+      "s3_api_endpoint": "https://YOUR-ACCOUNT-ID.r2.cloudflarestorage.com"
+    }
+  }
+}
+```
+
+> Always set the region as `auto` for R2.
+
+Cloudflare R2 implements the S3 API, so you use the same `backend "s3"` block in your TF module with R2 as you would with Amazon S3.
+
+This also means that you need to specify an Access Key ID and a Secret Access Key for TF to connect to the R2 bucket. Each API token for R2 has an Access Key ID and a Secret Access Key for compatibility with S3, but other types of Cloudflare API tokens do not. The Cloudflare documentation explains [how to get S3 credentials for an R2 API token](https://developers.cloudflare.com/r2/api/tokens/). Set these S3 credentials as environment variables: `ACCESS_KEY_ID` and `SECRET_ACCESS_KEY`.
 
 ### Setting the tfvars for a Context
 
@@ -400,7 +436,7 @@ Set these variables to override the defaults:
 | tft:units     | List the units.                                                                            |
 | tft:validate  | _terraform validate_ for a unit\*                                                          |
 
-\*: These tasks require that you first [initialise](https://opentofu.org/docs/cli/commands/init/) the unit.
+\*: These tasks require that you first [initialize](https://opentofu.org/docs/cli/commands/init/) the unit.
 
 ### The `tft:context` Tasks
 
@@ -424,6 +460,7 @@ Set these variables to override the defaults:
 | -------------- | ------------------------------------------------------------------------ |
 | tft:init       | _terraform init_ for a unit. An alias for `tft:init:s3`.                 |
 | tft:init:local | _terraform init_ for a unit, with local state.                           |
+| tft:init:r2    | _terraform init_ for a unit, with Cloudflare R2 remote state.            |
 | tft:init:s3    | _terraform init_ for a unit, with S3 remote state and native S3 locking. |
 | tft:init:s3ddb | _terraform init_ for a unit, with S3 remote state and DynamoDB locking.  |
 
@@ -437,7 +474,7 @@ Similarly, there are no restrictions on how you run tasks on multiple units. You
 
 ### Migrating to Terraform
 
-By default, this tooling currently uses OpenTofu. Set `TFT_CLI_EXE` as an environment variable to specify the path to the tool that you wish to use. To use [OpenTofu](https://opentofu.org/), set `TFT_CLI_EXE` with the value `terraform`:
+By default, this tooling currently uses OpenTofu. Set `TFT_CLI_EXE` as an environment variable to specify the path to the tool that you wish to use. To use [Terraform](https://developer.hashicorp.com/terraform), set `TFT_CLI_EXE` with the value `terraform`:
 
 ```shell
 export TFT_CLI_EXE=terraform
@@ -448,12 +485,12 @@ TFT_CONTEXT=dev TFT_UNIT=my-app tft:init
 To specify which version of Terraform to use, create a `.terraform-version` file. This file should contain the version of Terraform and nothing else, like this:
 
 ```shell
-1.12.0
+1.15.3
 ```
 
 The `tenv` tool reads this file when installing or running Terraform.
 
-> Remember that if you switch between Terraform and OpenTofu, you will need to initialize your unit again, and when you run `apply` it will migrate the TF state. The OpenTofu Website provides [migration guides](https://opentofu.org/docs/intro/migration/), which includes information about code changes that you may need to make.
+> Remember that if you switch between Terraform and OpenTofu, the state may not be compatible. You will need to initialize your unit again, and when you run `apply` it will attempt to migrate the TF state.
 
 ## Contributing
 

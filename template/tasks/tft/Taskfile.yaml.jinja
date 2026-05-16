@@ -14,7 +14,7 @@
 # - A UNIX shell
 # - Git
 # - Task
-# - Terraform or OpenTofu
+# - OpenTofu or Terraform
 #
 # A _unit_ is a TF root module that can be managed by these tasks.
 # Each instance of a _unit_ is an _edition_.
@@ -27,7 +27,7 @@
 # Set these variables to override the defaults:
 #
 # TFT_PRODUCT_NAME   - Name of project
-# TFT_CLI_EXE        - The Terraform or OpenTofu executable to use
+# TFT_CLI_EXE        - The OpenTofu or Terraform executable to use
 # TFT_EDITION        - Name of TF workspace
 # TFT_REMOTE_BACKEND - Set TFT_REMOTE_BACKEND to "false" to force the use of local TF state:
 #
@@ -41,15 +41,15 @@ version: "3.38"
 
 vars:
   # Defaults
-  DEFAULT_TFT_CLI_EXE: terraform
+  DEFAULT_TFT_CLI_EXE: tofu
   DEFAULT_TFT_EDITION: default
   DEFAULT_TFT_PRODUCT_NAME:
     ref: "base .ROOT_DIR"
 
   # Variables to override
 
-  # Override with TFT_CLI_EXE to specify the Terraform or OpenTofu executable
-  # To use OpenTofu, specify: TFT_CLI_EXE=tofu
+  # Override with TFT_CLI_EXE to specify the OpenTofu or Terraform executable
+  # To use Terraform, specify: TFT_CLI_EXE=terraform
   CURRENT_TFT_CLI_EXE:
     ref: "default .DEFAULT_TFT_CLI_EXE .TFT_CLI_EXE"
   # Override with TFT_EDITION to specify the name of the TF workspace
@@ -335,7 +335,7 @@ tasks:
       vars: [TFT_CONTEXT, TFT_UNIT]
 
   init:s3:
-    desc: Initialise remote state for TF unit - S3 with native locking
+    desc: Initialise remote state for TF unit - S3-compatible with native locking
     aliases:
       - init
     deps: [clean]

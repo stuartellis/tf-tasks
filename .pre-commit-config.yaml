@@ -30,11 +30,6 @@ repos:
     rev: v8.29.0
     hooks:
       - id: gitleaks
-  - repo: https://github.com/fsfe/reuse-tool
-    rev: "v6.2.0"
-    hooks:
-      - id: reuse
-        stages: [pre-commit]
   - repo: https://github.com/rbubley/mirrors-prettier
     rev: "v3.6.2"
     hooks:

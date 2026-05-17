@@ -251,9 +251,9 @@ This tooling also supports [Cloudflare R2](https://developers.cloudflare.com/r2/
 
 > Always set the region as `auto` for R2.
 
-Cloudflare R2 implements the S3 API, so you use the same `backend "s3"` block in your TF module with R2 as you would with Amazon S3.
+Cloudflare R2 implements the S3 API, so you use the same `backend "s3"` block in your TF module with R2 as you would with Amazon S3. You specify an HTTPS endpoint for the S3 API, which is your Cloudflare account ID, followed by `.r2.cloudflarestorage.com`.
 
-This also means that you need to specify an Access Key ID and a Secret Access Key for TF to connect to the R2 bucket. Each API token for R2 has an Access Key ID and a Secret Access Key for compatibility with S3, but other types of Cloudflare API tokens do not. The Cloudflare documentation explains [how to get S3 credentials for an R2 API token](https://developers.cloudflare.com/r2/api/tokens/). Set these S3 credentials as environment variables: `ACCESS_KEY_ID` and `SECRET_ACCESS_KEY`.
+This compatibility with S3 means that you also need to specify an Access Key ID and a Secret Access Key for TF to connect to the R2 bucket. Each API token for R2 is given an Access Key ID and a Secret Access Key for compatibility with S3, but other types of Cloudflare API tokens do not. Create an bucket-scoped API token for this purpose, with `Read` and `Edit` permissions. The Cloudflare documentation explains [how to get S3 credentials for an R2 API token](https://developers.cloudflare.com/r2/api/tokens/). Set these S3 credentials as environment variables: `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. If you use the Cloudflare TF provider to manage resources then you must specify a separate API token with administrative permissions through the `CLOUDFLARE_API_TOKEN` environment variable.
 
 ### Setting the tfvars for a Context
 
@@ -325,7 +325,7 @@ task tft:forget
 
 ### Formatting
 
-To check whether _terraform fmt_ needs to be run on the module, use the `tft:check-fmt` task:
+To check whether _tofu fmt_ needs to be run on the module, use the `tft:check-fmt` task:
 
 ```shell
 TFT_UNIT=my-app task tft:check-fmt

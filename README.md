@@ -325,7 +325,7 @@ task tft:forget
 
 ### Formatting
 
-To check whether _terraform fmt_ needs to be run on the module, use the `tft:check-fmt` task:
+To check whether _tofu fmt_ needs to be run on the module, use the `tft:check-fmt` task:
 
 ```shell
 TFT_UNIT=my-app task tft:check-fmt

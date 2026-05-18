@@ -183,7 +183,7 @@ TFT_CONTEXT=dev task tft:context:new
 
 This creates a new context. Edit the `context.json` file in the directory `tf/contexts/<CONTEXT>/` to set the `environment` name and specify the settings for the [remote state](https://opentofu.org/docs/language/state/remote/) storage that you want to use.
 
-> This tooling currently only supports Amazon S3 for remote state storage.
+> This tooling currently only supports Amazon S3 and Cloudflare R2 for remote state storage.
 
 ### Setting the Remote State for a Context
 

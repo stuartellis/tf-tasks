@@ -113,7 +113,7 @@ TFT_CONTEXT=dev TFT_UNIT=my-app task tft:test
 
 The integration tests can create and then destroy unique copies of the resources for every test run.
 
-To pass extra options to Terraform or OpenTofu, add `--` to the end of the command, followed by the options:
+To pass extra options to OpenTofu or Terraform, add `--` to the end of the command, followed by the options:
 
 ```shell
 task tft:init -- -upgrade
@@ -411,7 +411,7 @@ Copier `update` synchronizes the files in the project that the template manages 
 Set these variables to override the defaults:
 
 - `TFT_PRODUCT_NAME` - The name of the project
-- `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
+- `TFT_CLI_EXE` - The OpenTofu or Terraform executable to use
 - `TFT_REMOTE_BACKEND` - Set to _false_ to force the use of local TF state
 - `TFT_EDITION` - Set the identifier for an extra instance with a TF workspace
 

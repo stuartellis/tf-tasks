@@ -113,7 +113,7 @@ TFT_CONTEXT=dev TFT_UNIT=my-app task tft:test
 
 The integration tests can create and then destroy unique copies of the resources for every test run.
 
-To pass extra options to Terraform or OpenTofu, add `--` to the end of the command, followed by the options:
+To pass extra options to OpenTofu or Terraform, add `--` to the end of the command, followed by the options:
 
 ```shell
 task tft:init -- -upgrade
@@ -183,7 +183,7 @@ TFT_CONTEXT=dev task tft:context:new
 
 This creates a new context. Edit the `context.json` file in the directory `tf/contexts/<CONTEXT>/` to set the `environment` name and specify the settings for the [remote state](https://opentofu.org/docs/language/state/remote/) storage that you want to use.
 
-> This tooling currently only supports Amazon S3 for remote state storage.
+> This tooling currently only supports Amazon S3 and Cloudflare R2 for remote state storage.
 
 ### Setting the Remote State for a Context
 
@@ -411,7 +411,7 @@ Copier `update` synchronizes the files in the project that the template manages 
 Set these variables to override the defaults:
 
 - `TFT_PRODUCT_NAME` - The name of the project
-- `TFT_CLI_EXE` - The Terraform or OpenTofu executable to use
+- `TFT_CLI_EXE` - The OpenTofu or Terraform executable to use
 - `TFT_REMOTE_BACKEND` - Set to _false_ to force the use of local TF state
 - `TFT_EDITION` - Set the identifier for an extra instance with a TF workspace
 
